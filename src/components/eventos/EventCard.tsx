@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Evento } from '../../types/domain'
+import { formatearPresupuesto } from '../../utils/presupuesto'
 
 export function EventCard({ evento, showReplicar }: { evento: Evento; showReplicar?: boolean }) {
   return (
@@ -20,7 +21,8 @@ export function EventCard({ evento, showReplicar }: { evento: Evento; showReplic
           </span>
         </div>
         <p className="mt-1 text-sm text-navy-500">
-          ${evento.presupuesto} · Comprar antes de {evento.fecha_compra}
+          {formatearPresupuesto(evento.presupuesto_monto, evento.presupuesto_moneda)} · Comprar antes de{' '}
+          {evento.fecha_compra}
         </p>
       </Link>
       {showReplicar && (

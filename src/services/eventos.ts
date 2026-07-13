@@ -7,9 +7,10 @@ function generateCodigo(): string {
 
 export interface CrearEventoInput {
   nombre: string
-  presupuesto: number
+  presupuestoMonto: number
+  presupuestoMoneda: string
   fechaCompra: string
-  fechaRevelacion: string
+  fechaIntercambio: string
   modo: ModoEvento
   universo?: Universo
   emoji?: string
@@ -25,9 +26,10 @@ export async function crearEvento(input: CrearEventoInput) {
   for (let attempt = 0; attempt < 3; attempt++) {
     const { data, error } = await supabase.rpc('crear_evento_con_admin', {
       p_nombre: input.nombre,
-      p_presupuesto: input.presupuesto,
+      p_presupuesto_monto: input.presupuestoMonto,
+      p_presupuesto_moneda: input.presupuestoMoneda,
       p_fecha_compra: input.fechaCompra,
-      p_fecha_revelacion: input.fechaRevelacion,
+      p_fecha_intercambio: input.fechaIntercambio,
       p_codigo_acceso: generateCodigo(),
       p_modo: input.modo,
       p_universo: input.universo,
@@ -111,4 +113,31 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<Evento> {
 export async function marcarEventoCompletado(eventoId: string) {
   const { error } = await supabase.from('eventos').update({ estado: 'completado' }).eq('id', eventoId)
   if (error) throw error
+}
+
+export interface ActualizarEventoInput {
+  nombre?: string
+  descripcion?: string | null
+  presupuestoMonto?: number
+  presupuestoMoneda?: string
+  fechaCompra?: string
+  fechaIntercambio?: string
+}
+
+export async function actualizarEvento(eventoId: string, input: ActualizarEventoInput): Promise<Evento> {
+  const { data, error } = await supabase
+    .from('eventos')
+    .update({
+      nombre: input.nombre,
+      descripcion: input.descripcion,
+      presupuesto_monto: input.presupuestoMonto,
+      presupuesto_moneda: input.presupuestoMoneda,
+      fecha_compra: input.fechaCompra,
+      fecha_intercambio: input.fechaIntercambio,
+    })
+    .eq('id', eventoId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }

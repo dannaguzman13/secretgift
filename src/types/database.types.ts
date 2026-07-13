@@ -175,12 +175,13 @@ export type Database = {
           emoji: string | null
           estado: string
           fecha_compra: string
-          fecha_revelacion: string
+          fecha_intercambio: string
           id: string
           juego_iniciado_at: string | null
           modo: string
           nombre: string
-          presupuesto: number
+          presupuesto_moneda: string
+          presupuesto_monto: number
           recomendacion: string | null
           requisitos: string | null
           restricciones: string | null
@@ -198,12 +199,13 @@ export type Database = {
           emoji?: string | null
           estado?: string
           fecha_compra: string
-          fecha_revelacion: string
+          fecha_intercambio: string
           id?: string
           juego_iniciado_at?: string | null
           modo?: string
           nombre: string
-          presupuesto: number
+          presupuesto_moneda: string
+          presupuesto_monto: number
           recomendacion?: string | null
           requisitos?: string | null
           restricciones?: string | null
@@ -221,12 +223,13 @@ export type Database = {
           emoji?: string | null
           estado?: string
           fecha_compra?: string
-          fecha_revelacion?: string
+          fecha_intercambio?: string
           id?: string
           juego_iniciado_at?: string | null
           modo?: string
           nombre?: string
-          presupuesto?: number
+          presupuesto_moneda?: string
+          presupuesto_monto?: number
           recomendacion?: string | null
           requisitos?: string | null
           restricciones?: string | null
@@ -422,10 +425,11 @@ export type Database = {
           p_descripcion?: string
           p_emoji?: string
           p_fecha_compra: string
-          p_fecha_revelacion: string
+          p_fecha_intercambio: string
           p_modo?: string
           p_nombre: string
-          p_presupuesto: number
+          p_presupuesto_moneda: string
+          p_presupuesto_monto: number
           p_recomendacion?: string
           p_requisitos?: string
           p_restricciones?: string
@@ -440,12 +444,13 @@ export type Database = {
           emoji: string | null
           estado: string
           fecha_compra: string
-          fecha_revelacion: string
+          fecha_intercambio: string
           id: string
           juego_iniciado_at: string | null
           modo: string
           nombre: string
-          presupuesto: number
+          presupuesto_moneda: string
+          presupuesto_monto: number
           recomendacion: string | null
           requisitos: string | null
           restricciones: string | null
@@ -467,11 +472,13 @@ export type Database = {
         Returns: {
           estado: string
           fecha_compra: string
+          fecha_intercambio: string
           id: string
           modo: string
           nombre: string
           participantes_count: number
-          presupuesto: number
+          presupuesto_moneda: string
+          presupuesto_monto: number
           sorteo_realizado_at: string
           universo: string
         }[]

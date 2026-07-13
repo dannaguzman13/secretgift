@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { DashboardEventoData } from '../../services/dashboard'
+import { formatearPresupuesto } from '../../utils/presupuesto'
 
 export function RegaloRobadoModeBlock({ data }: { data: DashboardEventoData }) {
   const { evento } = data
@@ -11,7 +12,7 @@ export function RegaloRobadoModeBlock({ data }: { data: DashboardEventoData }) {
       <dl className="flex flex-col gap-3">
         <div className="flex items-baseline gap-2">
           <dt className="w-40 shrink-0 text-sm font-bold text-navy-600">💰 Presupuesto:</dt>
-          <dd className="text-navy-900">${evento.presupuesto} USD</dd>
+          <dd className="text-navy-900">{formatearPresupuesto(evento.presupuesto_monto, evento.presupuesto_moneda)}</dd>
         </div>
         <div className="flex items-baseline gap-2">
           <dt className="w-40 shrink-0 text-sm font-bold text-navy-600">🎯 Temática:</dt>

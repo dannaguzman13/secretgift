@@ -10,13 +10,13 @@ export function CreateEventPage() {
   const [searchParams] = useSearchParams()
   const fromId = searchParams.get('from')
   const [created, setCreated] = useState<Evento | null>(null)
-  const [initial, setInitial] = useState<{ nombre?: string; presupuesto?: number } | undefined>()
+  const [initial, setInitial] = useState<{ nombre?: string; presupuestoMonto?: number } | undefined>()
   const [loadingInitial, setLoadingInitial] = useState(!!fromId)
 
   useEffect(() => {
     if (!fromId) return
     obtenerEventoDetalle(fromId)
-      .then((e) => setInitial({ nombre: `${e.nombre} (nuevo)`, presupuesto: e.presupuesto }))
+      .then((e) => setInitial({ nombre: `${e.nombre} (nuevo)`, presupuestoMonto: e.presupuesto_monto }))
       .catch(() => {})
       .finally(() => setLoadingInitial(false))
   }, [fromId])

@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth'
 import { getEventPreviewByCode, joinEventByCode } from '../services/eventos'
 import { getErrorMessage } from '../utils/helpers'
 import { MAX_PARTICIPANTES_ULTRA_SECRETO } from '../utils/constants'
+import { formatearPresupuesto } from '../utils/presupuesto'
+import { formatFechaIntercambio } from '../utils/fechaIntercambio'
 
 type Preview = Awaited<ReturnType<typeof getEventPreviewByCode>>
 
@@ -82,7 +84,8 @@ export function JoinBuyerPage() {
     <div className="mx-auto mt-16 max-w-sm px-4 text-center">
       <h1 className="mb-2 font-display text-2xl text-navy-900">{preview.nombre}</h1>
       <p className="mb-6 text-navy-600">
-        Presupuesto sugerido: ${preview.presupuesto} · Comprar antes de {preview.fecha_compra}
+        Presupuesto sugerido: {formatearPresupuesto(preview.presupuesto_monto, preview.presupuesto_moneda)} · Comprar
+        antes de {preview.fecha_compra} · Intercambio: {formatFechaIntercambio(preview.fecha_intercambio)}
       </p>
       {preview.sorteo_realizado_at ? (
         <p className="text-sm text-navy-500">El sorteo ya se realizó, no puedes unirte a este evento.</p>

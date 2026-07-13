@@ -6,6 +6,8 @@ import { obtenerMiAsignacion } from '../services/asignaciones'
 import { listarParticipantes, listarParticipantesUltraSecreto } from '../services/participantes'
 import type { ParticipanteConUsuario, ParticipanteUltraSecreto } from '../services/participantes'
 import { InviteLinkBox } from '../components/eventos/InviteLinkBox'
+import { formatearPresupuesto } from '../utils/presupuesto'
+import { formatFechaIntercambio } from '../utils/fechaIntercambio'
 import { AmigoSecretoView } from '../components/eventos/AmigoSecretoView'
 import { UltraSecretoView } from '../components/ultraSecreto/UltraSecretoView'
 import { RegaloRobadoView } from '../components/regaloRobado/RegaloRobadoView'
@@ -83,8 +85,8 @@ export function EventDetailPage() {
       <p className="text-xs font-bold tracking-wide text-navy-500 uppercase">{MODO_LABELS[evento.modo]}</p>
       <h1 className="font-display text-2xl text-navy-900">{evento.nombre}</h1>
       <p className="mt-1 text-navy-600">
-        Presupuesto: ${evento.presupuesto} · Comprar antes de {evento.fecha_compra} · Revelación:{' '}
-        {evento.fecha_revelacion}
+        Presupuesto: {formatearPresupuesto(evento.presupuesto_monto, evento.presupuesto_moneda)} · Comprar antes de{' '}
+        {evento.fecha_compra} · Intercambio: {formatFechaIntercambio(evento.fecha_intercambio)}
       </p>
       {isCompletado && (
         <p className="mt-2 text-sm font-bold text-success">🎉 Este evento ya fue revelado.</p>

@@ -81,7 +81,11 @@ export function DashboardPage() {
           {dataError && <p className="text-error">{dataError}</p>}
           {data && !loadingData && (
             <>
-              <EventInfoCard evento={data.evento} participantesCount={data.participantesCount} />
+              <EventInfoCard
+                evento={data.evento}
+                participantesCount={data.participantesCount}
+                onEventoActualizado={(evento) => setData((prev) => (prev ? { ...prev, evento } : prev))}
+              />
               <ModeBlock data={data} />
               <ParticipantsBlock
                 sorteoRealizado={data.sorteoRealizado}

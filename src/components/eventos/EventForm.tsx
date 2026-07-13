@@ -2,23 +2,30 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { CrearEventoInput } from '../../services/eventos'
 import { getErrorMessage } from '../../utils/helpers'
+import { validarFechaIntercambio } from '../../utils/fechaIntercambio'
+import { validarPresupuesto } from '../../utils/presupuesto'
 import type { ModoEvento, Universo } from '../../types/domain'
 import { UniversoSelector } from '../ultraSecreto/UniversoSelector'
 import { MODOS } from '../../utils/gameModes'
+import { PresupuestoInput } from './PresupuestoInput'
 
 export function EventForm({
   onSubmit,
   initial,
 }: {
   onSubmit: (input: CrearEventoInput) => Promise<void>
-  initial?: { nombre?: string; presupuesto?: number }
+  initial?: { nombre?: string; presupuestoMonto?: number }
 }) {
   const [nombre, setNombre] = useState(initial?.nombre ?? '')
   const [emoji, setEmoji] = useState('')
   const [descripcion, setDescripcion] = useState('')
-  const [presupuesto, setPresupuesto] = useState(initial?.presupuesto ? String(initial.presupuesto) : '')
+  const [presupuestoMonto, setPresupuestoMonto] = useState(
+    initial?.presupuestoMonto ? String(initial.presupuestoMonto) : '',
+  )
+  const [presupuestoMoneda, setPresupuestoMoneda] = useState('USD')
   const [fechaCompra, setFechaCompra] = useState('')
-  const [fechaRevelacion, setFechaRevelacion] = useState('')
+  const [intercambioFecha, setIntercambioFecha] = useState('')
+  const [intercambioHora, setIntercambioHora] = useState('18:00')
   const [modo, setModo] = useState<ModoEvento>('amigo_secreto')
   const [universo, setUniverso] = useState<Universo | null>(null)
   const [tematica, setTematica] = useState('')
@@ -32,13 +39,16 @@ export function EventForm({
     e.preventDefault()
     setError(null)
 
-    const presupuestoNum = Number(presupuesto)
-    if (!(presupuestoNum > 0)) {
-      setError('El presupuesto debe ser mayor a 0')
+    const presupuestoMontoNum = Number(presupuestoMonto)
+    const errorPresupuesto = validarPresupuesto(presupuestoMontoNum, presupuestoMoneda)
+    if (errorPresupuesto) {
+      setError(errorPresupuesto)
       return
     }
-    if (fechaRevelacion < fechaCompra) {
-      setError('La fecha de revelación debe ser igual o posterior a la fecha de compra')
+    const fechaIntercambio = new Date(`${intercambioFecha}T${intercambioHora}:00`).toISOString()
+    const errorFecha = validarFechaIntercambio(fechaIntercambio, fechaCompra)
+    if (errorFecha) {
+      setError(errorFecha)
       return
     }
     if (modo === 'ultra_secreto' && !universo) {
@@ -54,9 +64,10 @@ export function EventForm({
     try {
       await onSubmit({
         nombre,
-        presupuesto: presupuestoNum,
+        presupuestoMonto: presupuestoMontoNum,
+        presupuestoMoneda,
         fechaCompra,
-        fechaRevelacion,
+        fechaIntercambio,
         modo,
         universo: modo === 'ultra_secreto' ? (universo ?? undefined) : undefined,
         emoji: emoji.trim() || undefined,
@@ -203,21 +214,13 @@ export function EventForm({
           </div>
         </div>
       )}
-      <div>
-        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
-          Presupuesto sugerido
-        </label>
-        <input
-          type="number"
-          required
-          min="0.01"
-          step="0.01"
-          value={presupuesto}
-          onChange={(e) => setPresupuesto(e.target.value)}
-          className="input-field"
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <PresupuestoInput
+        monto={presupuestoMonto}
+        moneda={presupuestoMoneda}
+        onMontoChange={setPresupuestoMonto}
+        onMonedaChange={setPresupuestoMoneda}
+      />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
             Fecha límite de compra
@@ -232,13 +235,23 @@ export function EventForm({
         </div>
         <div>
           <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
-            Fecha de revelación
+            Fecha del intercambio
           </label>
           <input
             type="date"
             required
-            value={fechaRevelacion}
-            onChange={(e) => setFechaRevelacion(e.target.value)}
+            value={intercambioFecha}
+            onChange={(e) => setIntercambioFecha(e.target.value)}
+            className="input-field"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">Hora</label>
+          <input
+            type="time"
+            required
+            value={intercambioHora}
+            onChange={(e) => setIntercambioHora(e.target.value)}
             className="input-field"
           />
         </div>
