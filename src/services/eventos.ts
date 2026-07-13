@@ -12,6 +12,12 @@ export interface CrearEventoInput {
   fechaRevelacion: string
   modo: ModoEvento
   universo?: Universo
+  emoji?: string
+  descripcion?: string
+  tematica?: string
+  restricciones?: string
+  requisitos?: string
+  recomendacion?: string
 }
 
 export async function crearEvento(input: CrearEventoInput) {
@@ -25,6 +31,12 @@ export async function crearEvento(input: CrearEventoInput) {
       p_codigo_acceso: generateCodigo(),
       p_modo: input.modo,
       p_universo: input.universo,
+      p_emoji: input.emoji,
+      p_descripcion: input.descripcion,
+      p_tematica: input.tematica,
+      p_restricciones: input.restricciones,
+      p_requisitos: input.requisitos,
+      p_recomendacion: input.recomendacion,
     })
 
     if (!error) {

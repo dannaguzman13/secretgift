@@ -1,66 +1,97 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 import { obtenerMisEventos } from '../services/eventos'
-import { EventCard } from '../components/eventos/EventCard'
+import { obtenerDashboardEvento } from '../services/dashboard'
+import type { DashboardEventoData } from '../services/dashboard'
+import { DashboardSidebar } from '../components/dashboard/DashboardSidebar'
+import { EventInfoCard } from '../components/dashboard/EventInfoCard'
+import { ModeBlock } from '../components/dashboard/ModeBlock'
+import { ParticipantsBlock } from '../components/dashboard/ParticipantsBlock'
 import type { Evento } from '../types/domain'
 import { getErrorMessage } from '../utils/helpers'
 
 export function DashboardPage() {
+  const { user } = useAuth()
+  const { eventoId } = useParams<{ eventoId?: string }>()
+  const navigate = useNavigate()
+
   const [eventos, setEventos] = useState<Evento[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [loadingEventos, setLoadingEventos] = useState(true)
+  const [eventosError, setEventosError] = useState<string | null>(null)
+
+  const [data, setData] = useState<DashboardEventoData | null>(null)
+  const [loadingData, setLoadingData] = useState(false)
+  const [dataError, setDataError] = useState<string | null>(null)
 
   useEffect(() => {
     obtenerMisEventos()
       .then(setEventos)
-      .catch((err) => setError(getErrorMessage(err, 'No se pudieron cargar tus eventos')))
-      .finally(() => setLoading(false))
+      .catch((err) => setEventosError(getErrorMessage(err, 'No se pudieron cargar tus eventos')))
+      .finally(() => setLoadingEventos(false))
   }, [])
 
-  const proximos = eventos.filter((e) => e.estado === 'activo')
-  const historial = eventos.filter((e) => e.estado !== 'activo')
+  useEffect(() => {
+    if (loadingEventos || eventos.length === 0) return
+    if (!eventoId) {
+      const primero = eventos.find((e) => e.estado === 'activo') ?? eventos[0]
+      navigate(`/dashboard/${primero.id}`, { replace: true })
+    }
+  }, [loadingEventos, eventos, eventoId, navigate])
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-navy-900">Mis eventos</h1>
-        <Link to="/crear-evento" className="btn-primary text-sm">
+  useEffect(() => {
+    if (!eventoId || !user) return
+    setLoadingData(true)
+    setDataError(null)
+    obtenerDashboardEvento(eventoId, user.id)
+      .then(setData)
+      .catch((err) => setDataError(getErrorMessage(err, 'No se pudo cargar este evento')))
+      .finally(() => setLoadingData(false))
+  }, [eventoId, user])
+
+  if (loadingEventos) {
+    return <div className="flex h-64 items-center justify-center text-navy-500">Cargando...</div>
+  }
+
+  if (eventosError) {
+    return <p className="p-8 text-error">{eventosError}</p>
+  }
+
+  if (eventos.length === 0) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <p className="mb-4 text-navy-600">Todavía no tienes eventos.</p>
+        <Link to="/crear-evento" className="btn-primary">
           + Crear evento
         </Link>
       </div>
+    )
+  }
 
-      {loading && <p className="text-navy-500">Cargando...</p>}
-      {error && <p className="text-error">{error}</p>}
-
-      {!loading && !error && (
-        <>
-          <section className="mb-8">
-            <h2 className="mb-3 text-xs font-bold tracking-wide text-navy-600 uppercase">Próximos</h2>
-            {proximos.length === 0 ? (
-              <p className="text-navy-500">No tienes eventos activos todavía.</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {proximos.map((e) => (
-                  <EventCard key={e.id} evento={e} />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="mb-3 text-xs font-bold tracking-wide text-navy-600 uppercase">Historial</h2>
-            {historial.length === 0 ? (
-              <p className="text-navy-500">Todavía no hay eventos completados.</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {historial.map((e) => (
-                  <EventCard key={e.id} evento={e} showReplicar={e.estado === 'completado'} />
-                ))}
-              </div>
-            )}
-          </section>
-        </>
-      )}
+  return (
+    <div className="flex flex-col sm:h-[calc(100vh-64px)] sm:flex-row">
+      <DashboardSidebar
+        eventos={eventos}
+        selectedId={eventoId ?? null}
+        onSelect={(id) => navigate(`/dashboard/${id}`, { replace: true })}
+      />
+      <div className="flex-1 sm:overflow-y-auto">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
+          {loadingData && <p className="text-navy-500">Cargando evento...</p>}
+          {dataError && <p className="text-error">{dataError}</p>}
+          {data && !loadingData && (
+            <>
+              <EventInfoCard evento={data.evento} participantesCount={data.participantesCount} />
+              <ModeBlock data={data} />
+              <ParticipantsBlock
+                sorteoRealizado={data.sorteoRealizado}
+                estadoCompras={data.estadoCompras}
+                participantes={data.participantes}
+              />
+            </>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

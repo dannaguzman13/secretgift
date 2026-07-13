@@ -171,6 +171,8 @@ export type Database = {
           admin_id: string
           codigo_acceso: string
           created_at: string | null
+          descripcion: string | null
+          emoji: string | null
           estado: string
           fecha_compra: string
           fecha_revelacion: string
@@ -179,7 +181,11 @@ export type Database = {
           modo: string
           nombre: string
           presupuesto: number
+          recomendacion: string | null
+          requisitos: string | null
+          restricciones: string | null
           sorteo_realizado_at: string | null
+          tematica: string | null
           turno_actual: number
           universo: string | null
           updated_at: string | null
@@ -188,6 +194,8 @@ export type Database = {
           admin_id: string
           codigo_acceso: string
           created_at?: string | null
+          descripcion?: string | null
+          emoji?: string | null
           estado?: string
           fecha_compra: string
           fecha_revelacion: string
@@ -196,7 +204,11 @@ export type Database = {
           modo?: string
           nombre: string
           presupuesto: number
+          recomendacion?: string | null
+          requisitos?: string | null
+          restricciones?: string | null
           sorteo_realizado_at?: string | null
+          tematica?: string | null
           turno_actual?: number
           universo?: string | null
           updated_at?: string | null
@@ -205,6 +217,8 @@ export type Database = {
           admin_id?: string
           codigo_acceso?: string
           created_at?: string | null
+          descripcion?: string | null
+          emoji?: string | null
           estado?: string
           fecha_compra?: string
           fecha_revelacion?: string
@@ -213,7 +227,11 @@ export type Database = {
           modo?: string
           nombre?: string
           presupuesto?: number
+          recomendacion?: string | null
+          requisitos?: string | null
+          restricciones?: string | null
           sorteo_realizado_at?: string | null
+          tematica?: string | null
           turno_actual?: number
           universo?: string | null
           updated_at?: string | null
@@ -401,17 +419,25 @@ export type Database = {
       crear_evento_con_admin: {
         Args: {
           p_codigo_acceso: string
+          p_descripcion?: string
+          p_emoji?: string
           p_fecha_compra: string
           p_fecha_revelacion: string
           p_modo?: string
           p_nombre: string
           p_presupuesto: number
+          p_recomendacion?: string
+          p_requisitos?: string
+          p_restricciones?: string
+          p_tematica?: string
           p_universo?: string
         }
         Returns: {
           admin_id: string
           codigo_acceso: string
           created_at: string | null
+          descripcion: string | null
+          emoji: string | null
           estado: string
           fecha_compra: string
           fecha_revelacion: string
@@ -420,7 +446,11 @@ export type Database = {
           modo: string
           nombre: string
           presupuesto: number
+          recomendacion: string | null
+          requisitos: string | null
+          restricciones: string | null
           sorteo_realizado_at: string | null
+          tematica: string | null
           turno_actual: number
           universo: string | null
           updated_at: string | null

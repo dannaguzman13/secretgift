@@ -39,6 +39,14 @@ export default function App() {
             }
           />
           <Route
+            path="/dashboard/:eventoId"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/crear-evento"
             element={
               <ProtectedRoute>
