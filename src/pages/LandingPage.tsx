@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { MODOS } from '../utils/gameModes'
 
 const problems = [
   {
@@ -124,6 +125,9 @@ export function LandingPage() {
           <a href="#solucion" className="text-sm text-pale-sky-100/70 transition hover:text-white">
             Solución
           </a>
+          <a href="#modos" className="text-sm text-pale-sky-100/70 transition hover:text-white">
+            Modos
+          </a>
           <a href="#casos" className="text-sm text-pale-sky-100/70 transition hover:text-white">
             Casos de uso
           </a>
@@ -212,6 +216,32 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Game Modes */}
+      <section id="modos" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <h2 className="mb-4 font-display text-3xl font-bold text-navy-900 sm:text-4xl">Elige tu modo de juego</h2>
+        <p className="mb-12 text-lg text-sky-600">
+          Tres formas de organizar tu intercambio, cada una con su toque.
+        </p>
+        <div className="grid gap-6 sm:grid-cols-3">
+          {MODOS.map((modo) => (
+            <div
+              key={modo.value}
+              className={
+                modo.value === 'amigo_secreto'
+                  ? 'card border-t-4 border-coral-400'
+                  : modo.value === 'ultra_secreto'
+                    ? 'card border-t-4 border-sky-400'
+                    : 'card border-t-4 border-peach-400'
+              }
+            >
+              <div className="mb-3 text-4xl">{modo.emoji}</div>
+              <h3 className="mb-2 font-display text-lg font-semibold text-navy-900">{modo.label}</h3>
+              <p className="text-sm text-sky-600">{modo.descripcion}</p>
+            </div>
+          ))}
         </div>
       </section>
 
