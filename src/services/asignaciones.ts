@@ -2,6 +2,8 @@ import { supabase } from './supabase'
 import { obtenerPreferencias } from './preferencias'
 import type { Asignacion } from '../types/domain'
 
+export type EstadoCompra = 'pendiente' | 'comprado'
+
 export async function obtenerMiAsignacion(eventoId: string): Promise<Asignacion | null> {
   const {
     data: { user },
@@ -24,7 +26,7 @@ export async function obtenerWishlistDeMiAsignado(eventoId: string, receptorId: 
 export interface AsignacionConComprador {
   id: string
   comprador_id: string
-  estado: string
+  estado: EstadoCompra
   comprado_at: string | null
   comprador: { nombre: string } | null
 }
@@ -35,10 +37,22 @@ export async function listarEstadoCompras(eventoId: string): Promise<AsignacionC
   return (data ?? []).map((row) => ({
     id: row.id,
     comprador_id: row.comprador_id,
-    estado: row.estado,
+    estado: row.estado as EstadoCompra,
     comprado_at: row.comprado_at,
     comprador: { nombre: row.comprador_nombre },
   }))
+}
+
+export async function actualizarMiEstadoCompraAsignacion(
+  eventoId: string,
+  estado: EstadoCompra,
+): Promise<Asignacion> {
+  const { data, error } = await supabase.rpc('actualizar_mi_estado_compra', {
+    p_evento_id: eventoId,
+    p_estado: estado,
+  })
+  if (error) throw error
+  return data
 }
 
 export async function marcarComprado(asignacionId: string, nota?: string) {

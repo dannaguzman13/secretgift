@@ -558,6 +558,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      actualizar_mi_estado_compra: {
+        Args: { p_estado: string; p_evento_id: string }
+        Returns: {
+          comprado_at: string | null
+          comprador_id: string
+          created_at: string | null
+          estado: string
+          evento_id: string
+          id: string
+          nota_comprador: string | null
+          receptor_id: string
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "asignaciones"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       crear_evento_con_admin: {
         Args: {
           p_codigo_acceso: string

@@ -88,18 +88,40 @@ export function ParticipantsBlock({
         <p className="text-navy-500">Todavía no hay compradores registrados.</p>
       ) : (
         <div className="flex flex-col divide-y divide-pale-sky-200">
-          {estadoCompras.map((row) => (
-            <div key={row.id} className="flex items-center justify-between py-2">
-              <span className="text-navy-900">{row.comprador?.nombre ?? '???'}</span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
-                  row.estado === 'comprado' ? 'bg-success-bg text-success' : 'bg-warning-bg text-warning'
-                }`}
-              >
-                {row.estado === 'comprado' ? '🟢 Compró regalo' : '🟡 Pendiente'}
-              </span>
-            </div>
-          ))}
+          {estadoCompras.map((row) => {
+            const esMio = row.comprador_id === userId
+            const siguienteEstado = row.estado === 'comprado' ? 'pendiente' : 'comprado'
+            const actualizando = actualizandoCompraUsuarioId === row.comprador_id
+
+            return (
+              <div key={row.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-navy-900">{row.comprador?.nombre ?? '???'}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      row.estado === 'comprado' ? 'bg-success-bg text-success' : 'bg-warning-bg text-warning'
+                    }`}
+                  >
+                    {row.estado === 'comprado' ? 'Compró regalo' : 'Pendiente'}
+                  </span>
+                  {esMio && onActualizarEstadoCompra && (
+                    <button
+                      type="button"
+                      className="btn-secondary px-3 py-1 text-xs"
+                      disabled={actualizando}
+                      onClick={() => onActualizarEstadoCompra(row.comprador_id, siguienteEstado)}
+                    >
+                      {actualizando
+                        ? 'Guardando...'
+                        : row.estado === 'comprado'
+                          ? 'Marcar pendiente'
+                          : 'Marcar comprado'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

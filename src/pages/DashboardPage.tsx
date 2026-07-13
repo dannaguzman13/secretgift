@@ -5,6 +5,7 @@ import { obtenerMisEventos } from '../services/eventos'
 import { obtenerDashboardEvento } from '../services/dashboard'
 import type { DashboardEventoData } from '../services/dashboard'
 import { actualizarMiEstadoCompra, listarEstadoComprasRegaloRobado } from '../services/regaloRobado'
+import { actualizarMiEstadoCompraAsignacion, listarEstadoCompras } from '../services/asignaciones'
 import { supabase } from '../services/supabase'
 import { DashboardSidebar } from '../components/dashboard/DashboardSidebar'
 import { EventInfoCard } from '../components/dashboard/EventInfoCard'
@@ -101,9 +102,16 @@ export function DashboardPage() {
     setActualizandoCompraUsuarioId(usuarioId)
     setDataError(null)
     try {
-      await actualizarMiEstadoCompra(eventoId, estado)
-      const estadoComprasRegaloRobado = await listarEstadoComprasRegaloRobado(eventoId)
-      setData((prev) => (prev ? { ...prev, estadoComprasRegaloRobado } : prev))
+      if (data.evento.modo === 'regalo_robado') {
+        await actualizarMiEstadoCompra(eventoId, estado)
+        const estadoComprasRegaloRobado = await listarEstadoComprasRegaloRobado(eventoId)
+        setData((prev) => (prev ? { ...prev, estadoComprasRegaloRobado } : prev))
+        return
+      }
+
+      await actualizarMiEstadoCompraAsignacion(eventoId, estado)
+      const estadoCompras = await listarEstadoCompras(eventoId)
+      setData((prev) => (prev ? { ...prev, estadoCompras } : prev))
     } catch (err) {
       setDataError(getErrorMessage(err, 'No se pudo actualizar tu estado de compra'))
     } finally {
