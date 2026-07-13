@@ -9,7 +9,6 @@ import {
   resolverTurno,
 } from '../../services/regaloRobado'
 import type { TurnoRegaloRobadoConUsuario } from '../../services/regaloRobado'
-import { PersonSelectModal } from './PersonSelectModal'
 import { TurnLog } from './TurnLog'
 import { getErrorMessage } from '../../utils/helpers'
 
@@ -40,11 +39,10 @@ export function RuletaGame({
   const [error, setError] = useState<string | null>(null)
   const [girando, setGirando] = useState(false)
   const [numeroAnimado, setNumeroAnimado] = useState<number | null>(null)
-  const [pendiente, setPendiente] = useState<{ numeroTurno: number; numeroRuleta: number; participanteId: string } | null>(null)
+  const [resultadoReciente, setResultadoReciente] = useState<number | null>(null)
 
   const jugadorEnTurno = calcularTurnoActual(ordenTurnos, turnoActual)
   const esMiTurno = jugadorEnTurno?.usuario_id === usuarioActualId
-  const pendienteEsMio = pendiente?.participanteId === usuarioActualId
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -53,24 +51,27 @@ export function RuletaGame({
         obtenerOrdenTurnosRegaloRobado(eventoId),
         obtenerTurnosRegaloRobado(eventoId),
       ])
-      const turnoPendiente = historial.find((turno) => turno.accion === 'pendiente')
       setOrdenTurnos(orden)
       setTurnos(historial)
-      setPendiente(
-        turnoPendiente
-          ? {
-              numeroTurno: turnoPendiente.numero_turno,
-              numeroRuleta: turnoPendiente.numero_ruleta,
-              participanteId: turnoPendiente.participante_id,
-            }
-          : null,
+
+      const turnoPendienteMio = historial.find(
+        (turno) => turno.accion === 'pendiente' && turno.participante_id === usuarioActualId,
       )
+      if (turnoPendienteMio) {
+        try {
+          await resolverTurno(eventoId, turnoPendienteMio.numero_turno, null)
+          const historialActualizado = await obtenerTurnosRegaloRobado(eventoId)
+          setTurnos(historialActualizado)
+        } catch {
+          // se resolverá en el próximo intento de carga
+        }
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo cargar la ruleta'))
     } finally {
       setLoading(false)
     }
-  }, [eventoId])
+  }, [eventoId, usuarioActualId])
 
   useEffect(() => {
     cargar()
@@ -92,21 +93,10 @@ export function RuletaGame({
     try {
       const resultado = await girarRuleta(eventoId)
       await animarRuleta(resultado.numeroRuleta)
-
-      const nuevoPendiente = {
-        numeroTurno: resultado.numeroTurno,
-        numeroRuleta: resultado.numeroRuleta,
-        participanteId: usuarioActualId,
-      }
-
-      if (resultado.numeroRuleta === 1 || resultado.numeroRuleta === 2) {
-        await resolverTurno(eventoId, resultado.numeroTurno, null)
-        await cargar()
-        await onTurnoResuelto()
-      } else {
-        setPendiente(nuevoPendiente)
-        await cargar()
-      }
+      await resolverTurno(eventoId, resultado.numeroTurno, null)
+      setResultadoReciente(resultado.numeroRuleta)
+      await cargar()
+      await onTurnoResuelto()
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo girar la ruleta'))
     } finally {
@@ -115,29 +105,7 @@ export function RuletaGame({
     }
   }
 
-  async function handleConfirmarObjetivos(usuarioIds: string[]) {
-    if (!pendiente) return
-    setError(null)
-    try {
-      await resolverTurno(eventoId, pendiente.numeroTurno, usuarioIds)
-      setPendiente(null)
-      await cargar()
-      await onTurnoResuelto()
-    } catch (err) {
-      setError(getErrorMessage(err, 'No se pudo resolver el turno'))
-    }
-  }
-
   if (loading) return <p className="text-navy-500">Cargando ruleta...</p>
-
-  const modalConfig =
-    pendiente?.numeroRuleta === 3
-      ? { min: 1, max: 1, title: 'Elige con quién intercambiar' }
-      : pendiente?.numeroRuleta === 4
-        ? { min: 2, max: 2, title: 'Elige 2 personas que intercambiarán regalos' }
-        : pendiente?.numeroRuleta === 5
-          ? { min: 3, max: undefined, title: 'Elige 3 o más personas para rotar sus regalos' }
-          : null
 
   return (
     <div className="flex flex-col gap-5">
@@ -159,24 +127,30 @@ export function RuletaGame({
           </div>
         )}
 
-        {esMiTurno && !pendiente && !girando && (
+        {!girando && resultadoReciente !== null && (
+          <div className="mt-4 flex flex-col gap-2 text-sm text-navy-600">
+            <p>
+              Salió {resultadoReciente}: {RULETA_LABELS[resultadoReciente]}
+            </p>
+            <p>Realiza esta acción con los regalos físicos en la reunión.</p>
+            <button
+              type="button"
+              className="btn-secondary mt-2"
+              onClick={() => setResultadoReciente(null)}
+            >
+              Entendido
+            </button>
+          </div>
+        )}
+
+        {esMiTurno && !girando && resultadoReciente === null && (
           <button onClick={handleGirar} disabled={girando} className="btn-primary mt-4 w-full text-lg">
             🎡 Girar ruleta
           </button>
         )}
 
-        {pendiente && !girando && (
-          <div className="mt-4 flex flex-col gap-2 text-sm text-navy-600">
-            <p>
-              Salió {pendiente.numeroRuleta}: {RULETA_LABELS[pendiente.numeroRuleta]}
-            </p>
-            <p>Realiza esta acción con los regalos físicos en la reunión.</p>
-          </div>
-        )}
-
-        {!esMiTurno && !pendiente && <p className="mt-4 text-sm text-navy-500">Esperando a que gire...</p>}
-        {pendiente && !pendienteEsMio && (
-          <p className="mt-4 text-sm text-navy-500">Esperando a que se confirme la acción...</p>
+        {!esMiTurno && !girando && resultadoReciente === null && (
+          <p className="mt-4 text-sm text-navy-500">Esperando a que gire...</p>
         )}
       </div>
 
@@ -202,18 +176,6 @@ export function RuletaGame({
         <h2 className="mb-2 text-xs font-bold tracking-wide text-navy-600 uppercase">Historial de turnos</h2>
         <TurnLog turnos={turnos} participantes={participantes} />
       </div>
-
-      {pendiente && modalConfig && pendienteEsMio && (
-        <PersonSelectModal
-          participantes={participantes}
-          excluirUsuarioId={pendiente.numeroRuleta === 3 ? usuarioActualId : undefined}
-          minSelect={modalConfig.min}
-          maxSelect={modalConfig.max}
-          title={modalConfig.title}
-          onConfirm={handleConfirmarObjetivos}
-          onCancel={() => setPendiente(null)}
-        />
-      )}
     </div>
   )
 }
