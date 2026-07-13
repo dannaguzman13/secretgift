@@ -1,6 +1,7 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { Navbar } from './components/layout/Navbar'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
+import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -9,9 +10,12 @@ import { JoinBuyerPage } from './pages/JoinBuyerPage'
 import { EventDetailPage } from './pages/EventDetailPage'
 
 function AppLayout({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation()
+  const isLanding = pathname === '/'
+
   return (
     <div className="min-h-screen bg-pale-sky-50">
-      <Navbar />
+      {!isLanding && <Navbar />}
       {children}
     </div>
   )
@@ -22,7 +26,7 @@ export default function App() {
     <BrowserRouter>
       <AppLayout>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/join/:codigo" element={<JoinBuyerPage />} />
