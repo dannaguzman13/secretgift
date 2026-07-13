@@ -6,12 +6,11 @@ import { SignupPage } from './pages/SignupPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { CreateEventPage } from './pages/CreateEventPage'
 import { JoinBuyerPage } from './pages/JoinBuyerPage'
-import { ClaimReceptorPage } from './pages/ClaimReceptorPage'
 import { EventDetailPage } from './pages/EventDetailPage'
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-pale-sky-50">
       <Navbar />
       {children}
     </div>
@@ -27,7 +26,6 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/join/:codigo" element={<JoinBuyerPage />} />
-          <Route path="/claim/:token" element={<ClaimReceptorPage />} />
           <Route
             path="/dashboard"
             element={

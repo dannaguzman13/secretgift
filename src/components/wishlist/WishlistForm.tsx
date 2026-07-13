@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { obtenerPreferencias, upsertPreferencias } from '../../services/preferencias'
 import { getErrorMessage } from '../../utils/helpers'
 
-export function WishlistForm({ eventoId }: { eventoId: string }) {
+export function WishlistForm({ eventoId, usuarioId }: { eventoId: string; usuarioId: string }) {
   const [deseos, setDeseos] = useState<string[]>(['', '', '', '', ''])
   const [restricciones, setRestricciones] = useState('')
   const [loading, setLoading] = useState(true)
@@ -12,7 +12,7 @@ export function WishlistForm({ eventoId }: { eventoId: string }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    obtenerPreferencias(eventoId)
+    obtenerPreferencias(eventoId, usuarioId)
       .then((pref) => {
         if (pref && pref.deseos.length > 0) {
           const filled = [...pref.deseos]
@@ -23,7 +23,7 @@ export function WishlistForm({ eventoId }: { eventoId: string }) {
       })
       .catch((err) => setError(getErrorMessage(err, 'No se pudo cargar')))
       .finally(() => setLoading(false))
-  }, [eventoId])
+  }, [eventoId, usuarioId])
 
   function updateDeseo(index: number, value: string) {
     setDeseos((prev) => prev.map((d, i) => (i === index ? value : d)))
@@ -40,7 +40,7 @@ export function WishlistForm({ eventoId }: { eventoId: string }) {
     setSaved(false)
     setError(null)
     try {
-      await upsertPreferencias(eventoId, deseos, restricciones)
+      await upsertPreferencias(eventoId, usuarioId, deseos, restricciones)
       setSaved(true)
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo guardar'))
@@ -49,12 +49,14 @@ export function WishlistForm({ eventoId }: { eventoId: string }) {
     }
   }
 
-  if (loading) return <p className="text-slate-500">Cargando...</p>
+  if (loading) return <p className="text-navy-500">Cargando...</p>
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="card flex flex-col gap-4">
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Ideas de regalos</label>
+        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+          Ideas de regalos
+        </label>
         <div className="flex flex-col gap-2">
           {deseos.map((deseo, i) => (
             <input
@@ -63,20 +65,16 @@ export function WishlistForm({ eventoId }: { eventoId: string }) {
               value={deseo}
               onChange={(e) => updateDeseo(i, e.target.value)}
               placeholder={`Idea ${i + 1}`}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+              className="input-field"
             />
           ))}
         </div>
-        <button
-          type="button"
-          onClick={addDeseo}
-          className="mt-2 text-sm font-medium text-slate-600 underline"
-        >
+        <button type="button" onClick={addDeseo} className="mt-2 text-sm font-bold text-sky-600 hover:text-sky-700">
           + Agregar otra idea
         </button>
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
+        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
           Restricciones (tallas, colores, alergias...)
         </label>
         <textarea
@@ -86,15 +84,11 @@ export function WishlistForm({ eventoId }: { eventoId: string }) {
             setSaved(false)
           }}
           rows={3}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+          className="input-field"
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={saving}
-        className="rounded-md bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-50"
-      >
+      {error && <p className="text-sm text-error">{error}</p>}
+      <button type="submit" disabled={saving} className="btn-primary">
         {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar'}
       </button>
     </form>

@@ -14,13 +14,15 @@ export function LoginPage() {
 
   return (
     <div className="mx-auto mt-16 w-full max-w-sm px-4">
-      <h1 className="mb-6 text-center text-2xl font-semibold text-slate-900">Iniciar sesión</h1>
-      <AuthForm mode="login" onSubmit={handleLogin} />
-      <p className="mt-4 text-center text-sm text-slate-500">
+      <h1 className="mb-6 text-center font-display text-3xl text-navy-900">Iniciar sesión</h1>
+      <div className="card">
+        <AuthForm mode="login" onSubmit={handleLogin} />
+      </div>
+      <p className="mt-4 text-center text-sm text-navy-600">
         ¿No tienes cuenta?{' '}
         <Link
           to={`/signup${redirectTo !== '/dashboard' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-          className="font-medium text-slate-900 underline"
+          className="font-bold text-sky-600 hover:text-sky-700"
         >
           Regístrate
         </Link>

@@ -11,18 +11,14 @@ export function InviteLinkBox({ label, url }: { label: string; url: string }) {
 
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-slate-700">{label}</label>
+      <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">{label}</label>
       <div className="flex items-center gap-2">
         <input
           readOnly
           value={url}
-          className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-600"
+          className="w-full rounded-md border-2 border-pale-sky-300 bg-pale-sky-100 px-3 py-2 text-sm text-navy-700"
         />
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="shrink-0 rounded-md bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800"
-        >
+        <button type="button" onClick={handleCopy} className="btn-secondary shrink-0 px-4 py-2 text-sm">
           {copied ? '¡Copiado!' : 'Copiar'}
         </button>
       </div>

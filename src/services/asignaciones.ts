@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { obtenerPreferencias } from './preferencias'
 import type { Asignacion } from '../types/domain'
 
 export async function obtenerMiAsignacion(eventoId: string): Promise<Asignacion | null> {
@@ -16,6 +17,10 @@ export async function obtenerMiAsignacion(eventoId: string): Promise<Asignacion 
   return data
 }
 
+export async function obtenerWishlistDeMiAsignado(eventoId: string, receptorId: string) {
+  return obtenerPreferencias(eventoId, receptorId)
+}
+
 export interface AsignacionConComprador {
   id: string
   comprador_id: string
@@ -27,7 +32,7 @@ export interface AsignacionConComprador {
 export async function listarAsignacionesAdmin(eventoId: string): Promise<AsignacionConComprador[]> {
   const { data, error } = await supabase
     .from('asignaciones')
-    .select('id, comprador_id, estado, comprado_at, comprador:usuarios(nombre, email)')
+    .select('id, comprador_id, estado, comprado_at, comprador:usuarios!asignaciones_comprador_id_fkey(nombre, email)')
     .eq('evento_id', eventoId)
   if (error) throw error
   return (data ?? []) as unknown as AsignacionConComprador[]

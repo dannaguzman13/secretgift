@@ -12,16 +12,16 @@ export function Navbar() {
   }
 
   return (
-    <nav className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
-      <Link to="/" className="text-lg font-semibold text-slate-900">
+    <nav className="flex items-center justify-between bg-navy-900 px-4 py-3 sm:px-6">
+      <Link to="/" className="font-display text-lg text-white">
         🎁 SecretGift
       </Link>
       {user && (
         <div className="flex items-center gap-4 text-sm">
-          <span className="hidden text-slate-500 sm:inline">{user.email}</span>
+          <span className="hidden text-pale-sky-200 sm:inline">{user.email}</span>
           <button
             onClick={handleLogout}
-            className="rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-100"
+            className="rounded-full px-3 py-1.5 font-semibold text-pale-sky-100 hover:bg-navy-800"
           >
             Cerrar sesión
           </button>

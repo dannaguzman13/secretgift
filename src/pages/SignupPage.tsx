@@ -29,10 +29,13 @@ export function SignupPage() {
   if (checkEmail) {
     return (
       <div className="mx-auto mt-16 w-full max-w-sm px-4 text-center">
-        <h1 className="mb-4 text-2xl font-semibold text-slate-900">Revisa tu correo</h1>
-        <p className="text-slate-600">
+        <h1 className="mb-4 font-display text-3xl text-navy-900">Revisa tu correo</h1>
+        <p className="text-navy-600">
           Te enviamos un enlace de confirmación. Después de confirmar tu cuenta, vuelve a{' '}
-          <Link to={`/login${redirectTo !== '/dashboard' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="font-medium text-slate-900 underline">
+          <Link
+            to={`/login${redirectTo !== '/dashboard' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
+            className="font-bold text-sky-600 hover:text-sky-700"
+          >
             iniciar sesión
           </Link>
           .
@@ -43,13 +46,15 @@ export function SignupPage() {
 
   return (
     <div className="mx-auto mt-16 w-full max-w-sm px-4">
-      <h1 className="mb-6 text-center text-2xl font-semibold text-slate-900">Crear cuenta</h1>
-      <AuthForm mode="signup" onSubmit={handleSignup} />
-      <p className="mt-4 text-center text-sm text-slate-500">
+      <h1 className="mb-6 text-center font-display text-3xl text-navy-900">Crear cuenta</h1>
+      <div className="card">
+        <AuthForm mode="signup" onSubmit={handleSignup} />
+      </div>
+      <p className="mt-4 text-center text-sm text-navy-600">
         ¿Ya tienes cuenta?{' '}
         <Link
           to={`/login${redirectTo !== '/dashboard' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-          className="font-medium text-slate-900 underline"
+          className="font-bold text-sky-600 hover:text-sky-700"
         >
           Inicia sesión
         </Link>

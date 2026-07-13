@@ -38,13 +38,13 @@ export function JoinBuyerPage() {
   }
 
   if (loadingPreview || authLoading) {
-    return <div className="flex h-64 items-center justify-center text-slate-500">Cargando...</div>
+    return <div className="flex h-64 items-center justify-center text-navy-500">Cargando...</div>
   }
 
   if (!preview) {
     return (
       <div className="mx-auto mt-16 max-w-sm px-4 text-center">
-        <p className="text-slate-600">Este código de invitación no es válido.</p>
+        <p className="text-navy-600">Este código de invitación no es válido.</p>
       </div>
     )
   }
@@ -53,35 +53,30 @@ export function JoinBuyerPage() {
 
   return (
     <div className="mx-auto mt-16 max-w-sm px-4 text-center">
-      <h1 className="mb-2 text-2xl font-semibold text-slate-900">{preview.nombre}</h1>
-      <p className="mb-6 text-slate-500">
+      <h1 className="mb-2 font-display text-2xl text-navy-900">{preview.nombre}</h1>
+      <p className="mb-6 text-navy-600">
         Presupuesto sugerido: ${preview.presupuesto} · Comprar antes de {preview.fecha_compra}
       </p>
-      {preview.estado !== 'activo' ? (
-        <p className="text-sm text-slate-500">Este evento ya no está aceptando participantes.</p>
+      {preview.sorteo_realizado_at ? (
+        <p className="text-sm text-navy-500">El sorteo ya se realizó, no puedes unirte a este evento.</p>
+      ) : preview.estado !== 'activo' ? (
+        <p className="text-sm text-navy-500">Este evento ya no está aceptando participantes.</p>
       ) : (
         <>
-          {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+          {error && <p className="mb-4 text-sm text-error">{error}</p>}
           {user ? (
-            <button
-              onClick={handleJoin}
-              disabled={joining}
-              className="w-full rounded-md bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-50"
-            >
-              {joining ? 'Uniéndote...' : 'Unirme como comprador'}
+            <button onClick={handleJoin} disabled={joining} className="btn-primary w-full">
+              {joining ? 'Uniéndote...' : 'Unirme'}
             </button>
           ) : (
             <div className="flex flex-col gap-2">
               <Link
                 to={`/signup?redirect=${encodeURIComponent(redirectPath)}`}
-                className="rounded-md bg-slate-900 px-4 py-2 text-white hover:bg-slate-800"
+                className="btn-primary"
               >
                 Crear cuenta para unirme
               </Link>
-              <Link
-                to={`/login?redirect=${encodeURIComponent(redirectPath)}`}
-                className="rounded-md border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
-              >
+              <Link to={`/login?redirect=${encodeURIComponent(redirectPath)}`} className="btn-ghost">
                 Ya tengo cuenta
               </Link>
             </div>

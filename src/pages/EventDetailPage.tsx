@@ -1,56 +1,79 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { marcarEventoCompletado, obtenerEventoDetalle, obtenerReceptorToken } from '../services/eventos'
+import { marcarEventoCompletado, obtenerEventoDetalle, realizarSorteo } from '../services/eventos'
 import { obtenerMiAsignacion } from '../services/asignaciones'
+import { listarParticipantes } from '../services/participantes'
+import type { ParticipanteConUsuario } from '../services/participantes'
 import { WishlistForm } from '../components/wishlist/WishlistForm'
-import { WishlistView } from '../components/wishlist/WishlistView'
+import { AssignmentRevealCard } from '../components/asignaciones/AssignmentRevealCard'
 import { BuyerStatusTable } from '../components/asignaciones/BuyerStatusTable'
 import { MarkBoughtButton } from '../components/asignaciones/MarkBoughtButton'
 import { InviteLinkBox } from '../components/eventos/InviteLinkBox'
 import type { Evento, Asignacion } from '../types/domain'
 import { getErrorMessage } from '../utils/helpers'
 
+const MIN_PARTICIPANTES = 3
+
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const [evento, setEvento] = useState<Evento | null>(null)
-  const [receptorToken, setReceptorToken] = useState<string | null>(null)
+  const [participantes, setParticipantes] = useState<ParticipanteConUsuario[]>([])
   const [miAsignacion, setMiAsignacion] = useState<Asignacion | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [revealing, setRevealing] = useState(false)
+  const [sorteando, setSorteando] = useState(false)
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
     setError(null)
-    obtenerEventoDetalle(id)
-      .then(setEvento)
+    Promise.all([obtenerEventoDetalle(id), listarParticipantes(id)])
+      .then(([eventoData, participantesData]) => {
+        setEvento(eventoData)
+        setParticipantes(participantesData)
+      })
       .catch(() => setError('No se pudo cargar este evento, o no tienes acceso a él.'))
       .finally(() => setLoading(false))
   }, [id])
 
   const isAdmin = !!(evento && user && evento.admin_id === user.id)
-  const isReceptor = !!(evento && user && evento.receptor_id === user.id)
-  const isComprador = !!evento && !!user && !isAdmin && !isReceptor
   const isCompletado = evento?.estado === 'completado'
+  const sorteoRealizado = !!evento?.sorteo_realizado_at
 
   useEffect(() => {
-    if (evento && isAdmin && !evento.receptor_id) {
-      obtenerReceptorToken(evento.id)
-        .then(setReceptorToken)
-        .catch(() => {})
-    }
-  }, [evento, isAdmin])
-
-  useEffect(() => {
-    if (evento && isComprador) {
+    if (evento && sorteoRealizado) {
       obtenerMiAsignacion(evento.id)
         .then(setMiAsignacion)
         .catch(() => {})
     }
-  }, [evento, isComprador])
+  }, [evento, sorteoRealizado])
+
+  async function refetchEvento() {
+    if (!id) return
+    const [eventoData, participantesData] = await Promise.all([
+      obtenerEventoDetalle(id),
+      listarParticipantes(id),
+    ])
+    setEvento(eventoData)
+    setParticipantes(participantesData)
+  }
+
+  async function handleSortear() {
+    if (!evento) return
+    setSorteando(true)
+    setError(null)
+    try {
+      await realizarSorteo(evento.id)
+      await refetchEvento()
+    } catch (err) {
+      setError(getErrorMessage(err, 'No se pudo realizar el sorteo'))
+    } finally {
+      setSorteando(false)
+    }
+  }
 
   async function handleRevelar() {
     if (!evento) return
@@ -66,12 +89,12 @@ export function EventDetailPage() {
   }
 
   if (loading) {
-    return <div className="flex h-64 items-center justify-center text-slate-500">Cargando...</div>
+    return <div className="flex h-64 items-center justify-center text-navy-500">Cargando...</div>
   }
 
   if (error || !evento) {
     return (
-      <div className="mx-auto mt-16 max-w-sm px-4 text-center text-slate-600">
+      <div className="mx-auto mt-16 max-w-sm px-4 text-center text-navy-600">
         {error ?? 'Evento no encontrado.'}
       </div>
     )
@@ -79,92 +102,90 @@ export function EventDetailPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-2xl font-semibold text-slate-900">{evento.nombre}</h1>
-      <p className="mt-1 text-slate-500">
+      <h1 className="font-display text-2xl text-navy-900">{evento.nombre}</h1>
+      <p className="mt-1 text-navy-600">
         Presupuesto: ${evento.presupuesto} · Comprar antes de {evento.fecha_compra} · Revelación:{' '}
         {evento.fecha_revelacion}
       </p>
       {isCompletado && (
-        <p className="mt-2 text-sm font-medium text-purple-700">🎉 Este evento ya fue revelado.</p>
+        <p className="mt-2 text-sm font-bold text-success">🎉 Este evento ya fue revelado.</p>
       )}
 
-      {isAdmin && (
+      {isAdmin && !isCompletado && (
+        <div className="mt-6">
+          <InviteLinkBox
+            label="Link para invitar al grupo"
+            url={`${import.meta.env.VITE_APP_URL}/join/${evento.codigo_acceso}`}
+          />
+        </div>
+      )}
+
+      {!sorteoRealizado && (
         <div className="mt-6 flex flex-col gap-6">
-          {!isCompletado && (
-            <InviteLinkBox
-              label="Link para compradores"
-              url={`${import.meta.env.VITE_APP_URL}/join/${evento.codigo_acceso}`}
-            />
-          )}
-          {!evento.receptor_id && receptorToken && (
-            <InviteLinkBox
-              label={`Link para que ${evento.receptor_nombre} confirme como receptor`}
-              url={`${import.meta.env.VITE_APP_URL}/claim/${receptorToken}`}
-            />
-          )}
-          {evento.receptor_id && (
-            <p className="text-sm text-green-700">✓ {evento.receptor_nombre} confirmó como receptor.</p>
-          )}
           <div>
-            <h2 className="mb-2 font-medium text-slate-900">Compradores</h2>
-            <BuyerStatusTable eventoId={evento.id} />
+            <h2 className="mb-2 text-xs font-bold tracking-wide text-navy-600 uppercase">
+              Tu lista de deseos
+            </h2>
+            <WishlistForm eventoId={evento.id} usuarioId={user!.id} />
           </div>
-          <div>
-            <h2 className="mb-2 font-medium text-slate-900">Lista de deseos</h2>
-            <WishlistView eventoId={evento.id} />
-          </div>
-          {!isCompletado && (
+          <p className="text-sm text-navy-600">
+            {participantes.length} participante{participantes.length === 1 ? '' : 's'} unido
+            {participantes.length === 1 ? '' : 's'}.
+          </p>
+          {isAdmin && (
             <div>
-              <button
-                onClick={handleRevelar}
-                disabled={revealing}
-                className="rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:opacity-50"
-              >
+              {participantes.length >= MIN_PARTICIPANTES ? (
+                <button onClick={handleSortear} disabled={sorteando} className="btn-primary">
+                  {sorteando ? 'Sorteando...' : 'Realizar sorteo'}
+                </button>
+              ) : (
+                <p className="text-sm text-navy-500">
+                  Necesitas al menos {MIN_PARTICIPANTES} participantes para sortear (van{' '}
+                  {participantes.length}).
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {sorteoRealizado && (
+        <div className="mt-6 flex flex-col gap-6">
+          {miAsignacion && (
+            <div>
+              <h2 className="mb-2 text-xs font-bold tracking-wide text-navy-600 uppercase">
+                Le regalas a
+              </h2>
+              <AssignmentRevealCard eventoId={evento.id} receptorId={miAsignacion.receptor_id} />
+              {!isCompletado &&
+                (miAsignacion.estado === 'comprado' ? (
+                  <p className="mt-3 font-bold text-success">✓ Ya marcaste que compraste el regalo.</p>
+                ) : (
+                  <div className="mt-3">
+                    <MarkBoughtButton
+                      asignacionId={miAsignacion.id}
+                      onDone={() => setMiAsignacion({ ...miAsignacion, estado: 'comprado' })}
+                    />
+                  </div>
+                ))}
+            </div>
+          )}
+          {(isAdmin || isCompletado) && (
+            <div>
+              <h2 className="mb-2 text-xs font-bold tracking-wide text-navy-600 uppercase">
+                Estado de compras
+              </h2>
+              <BuyerStatusTable eventoId={evento.id} />
+            </div>
+          )}
+          {isAdmin && !isCompletado && (
+            <div>
+              <button onClick={handleRevelar} disabled={revealing} className="btn-primary">
                 {revealing ? 'Revelando...' : 'Revelar evento'}
               </button>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-navy-500">
                 Marca el evento como completado y comparte el estado de compras con todo el grupo.
               </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {isReceptor && (
-        <div className="mt-6 flex flex-col gap-6">
-          <div>
-            <h2 className="mb-2 font-medium text-slate-900">Tu lista de deseos</h2>
-            <WishlistForm eventoId={evento.id} />
-          </div>
-          {isCompletado && (
-            <div>
-              <h2 className="mb-2 font-medium text-slate-900">Quién compró</h2>
-              <BuyerStatusTable eventoId={evento.id} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {isComprador && (
-        <div className="mt-6 flex flex-col gap-4">
-          <div>
-            <h2 className="mb-2 font-medium text-slate-900">Lista de deseos de {evento.receptor_nombre}</h2>
-            <WishlistView eventoId={evento.id} />
-          </div>
-          {miAsignacion &&
-            !isCompletado &&
-            (miAsignacion.estado === 'comprado' ? (
-              <p className="text-green-700">✓ Ya marcaste que compraste el regalo.</p>
-            ) : (
-              <MarkBoughtButton
-                asignacionId={miAsignacion.id}
-                onDone={() => setMiAsignacion({ ...miAsignacion, estado: 'comprado' })}
-              />
-            ))}
-          {isCompletado && (
-            <div>
-              <h2 className="mb-2 font-medium text-slate-900">Quién compró</h2>
-              <BuyerStatusTable eventoId={evento.id} />
             </div>
           )}
         </div>
