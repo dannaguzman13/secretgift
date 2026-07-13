@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { listarAsignacionesAdmin } from '../../services/asignaciones'
+import { listarEstadoCompras } from '../../services/asignaciones'
 import type { AsignacionConComprador } from '../../services/asignaciones'
 
 export function BuyerStatusTable({ eventoId }: { eventoId: string }) {
@@ -7,7 +7,7 @@ export function BuyerStatusTable({ eventoId }: { eventoId: string }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    listarAsignacionesAdmin(eventoId)
+    listarEstadoCompras(eventoId)
       .then(setRows)
       .finally(() => setLoading(false))
   }, [eventoId])

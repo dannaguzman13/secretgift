@@ -1,0 +1,2 @@
+export const MIN_PARTICIPANTES = 3
+export const MAX_PARTICIPANTES_ULTRA_SECRETO = 20

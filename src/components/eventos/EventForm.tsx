@@ -2,6 +2,24 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { CrearEventoInput } from '../../services/eventos'
 import { getErrorMessage } from '../../utils/helpers'
+import type { ModoEvento, Universo } from '../../types/domain'
+import { UniversoSelector } from '../ultraSecreto/UniversoSelector'
+
+const MODOS: { value: ModoEvento; emoji: string; label: string; descripcion: string }[] = [
+  { value: 'amigo_secreto', emoji: '🎁', label: 'Amigo Secreto', descripcion: 'El sorteo clásico, 1 a 1.' },
+  {
+    value: 'ultra_secreto',
+    emoji: '🕵️',
+    label: 'Ultra Secreto',
+    descripcion: 'Identidades ocultas con alias. Máx. 20 personas.',
+  },
+  {
+    value: 'regalo_robado',
+    emoji: '🎲',
+    label: 'Regalo Robado',
+    descripcion: 'Juego por turnos: gira la ruleta y roba regalos.',
+  },
+]
 
 export function EventForm({
   onSubmit,
@@ -14,6 +32,8 @@ export function EventForm({
   const [presupuesto, setPresupuesto] = useState(initial?.presupuesto ? String(initial.presupuesto) : '')
   const [fechaCompra, setFechaCompra] = useState('')
   const [fechaRevelacion, setFechaRevelacion] = useState('')
+  const [modo, setModo] = useState<ModoEvento>('amigo_secreto')
+  const [universo, setUniverso] = useState<Universo | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -30,6 +50,10 @@ export function EventForm({
       setError('La fecha de revelación debe ser igual o posterior a la fecha de compra')
       return
     }
+    if (modo === 'ultra_secreto' && !universo) {
+      setError('Elige un universo de aliases para Ultra Secreto')
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -38,6 +62,8 @@ export function EventForm({
         presupuesto: presupuestoNum,
         fechaCompra,
         fechaRevelacion,
+        modo,
+        universo: modo === 'ultra_secreto' ? (universo ?? undefined) : undefined,
       })
     } catch (err) {
       setError(getErrorMessage(err))
@@ -61,6 +87,39 @@ export function EventForm({
           className="input-field"
         />
       </div>
+      <div>
+        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+          ¿Qué modo de juego?
+        </label>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {MODOS.map((m) => {
+            const selected = modo === m.value
+            return (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => setModo(m.value)}
+                className={`rounded-md border-2 p-3 text-left transition-colors ${
+                  selected ? 'border-coral-400 bg-coral-50' : 'border-pale-sky-300 bg-white hover:border-coral-200'
+                }`}
+              >
+                <p className="font-bold text-navy-900">
+                  {m.emoji} {m.label}
+                </p>
+                <p className="text-xs text-navy-500">{m.descripcion}</p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+      {modo === 'ultra_secreto' && (
+        <div>
+          <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+            Elige el universo de aliases
+          </label>
+          <UniversoSelector value={universo} onChange={setUniverso} />
+        </div>
+      )}
       <div>
         <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
           Presupuesto sugerido

@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Evento } from '../types/domain'
+import type { Evento, ModoEvento, Universo } from '../types/domain'
 
 function generateCodigo(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -10,6 +10,8 @@ export interface CrearEventoInput {
   presupuesto: number
   fechaCompra: string
   fechaRevelacion: string
+  modo: ModoEvento
+  universo?: Universo
 }
 
 export async function crearEvento(input: CrearEventoInput) {
@@ -21,6 +23,8 @@ export async function crearEvento(input: CrearEventoInput) {
       p_fecha_compra: input.fechaCompra,
       p_fecha_revelacion: input.fechaRevelacion,
       p_codigo_acceso: generateCodigo(),
+      p_modo: input.modo,
+      p_universo: input.universo ?? null,
     })
 
     if (!error) {
@@ -75,6 +79,14 @@ export async function joinEventByCode(codigo: string): Promise<string> {
 
 export async function realizarSorteo(eventoId: string): Promise<void> {
   const { error } = await supabase.rpc('realizar_sorteo', { p_evento_id: eventoId })
+  if (error) throw error
+}
+
+export async function realizarSorteoUltraSecreto(eventoId: string, aliases: string[]): Promise<void> {
+  const { error } = await supabase.rpc('realizar_sorteo_ultra_secreto', {
+    p_evento_id: eventoId,
+    p_aliases: aliases,
+  })
   if (error) throw error
 }
 

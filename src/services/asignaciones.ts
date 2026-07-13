@@ -26,16 +26,19 @@ export interface AsignacionConComprador {
   comprador_id: string
   estado: string
   comprado_at: string | null
-  comprador: { nombre: string; email: string } | null
+  comprador: { nombre: string } | null
 }
 
-export async function listarAsignacionesAdmin(eventoId: string): Promise<AsignacionConComprador[]> {
-  const { data, error } = await supabase
-    .from('asignaciones')
-    .select('id, comprador_id, estado, comprado_at, comprador:usuarios!asignaciones_comprador_id_fkey(nombre, email)')
-    .eq('evento_id', eventoId)
+export async function listarEstadoCompras(eventoId: string): Promise<AsignacionConComprador[]> {
+  const { data, error } = await supabase.rpc('listar_estado_compras', { p_evento_id: eventoId })
   if (error) throw error
-  return (data ?? []) as unknown as AsignacionConComprador[]
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    comprador_id: row.comprador_id,
+    estado: row.estado,
+    comprado_at: row.comprado_at,
+    comprador: { nombre: row.comprador_nombre },
+  }))
 }
 
 export async function marcarComprado(asignacionId: string, nota?: string) {

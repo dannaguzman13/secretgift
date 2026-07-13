@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getEventPreviewByCode, joinEventByCode } from '../services/eventos'
 import { getErrorMessage } from '../utils/helpers'
+import { MAX_PARTICIPANTES_ULTRA_SECRETO } from '../utils/constants'
 
 type Preview = Awaited<ReturnType<typeof getEventPreviewByCode>>
 
@@ -16,12 +17,13 @@ export function JoinBuyerPage() {
   const [loadingPreview, setLoadingPreview] = useState(true)
 
   useEffect(() => {
-    if (!codigo) return
+    if (!codigo || !user) return
+    setLoadingPreview(true)
     getEventPreviewByCode(codigo)
       .then(setPreview)
       .catch((err) => setError(getErrorMessage(err, 'No se pudo cargar el evento')))
       .finally(() => setLoadingPreview(false))
-  }, [codigo])
+  }, [codigo, user])
 
   async function handleJoin() {
     if (!codigo) return
@@ -37,7 +39,32 @@ export function JoinBuyerPage() {
     }
   }
 
-  if (loadingPreview || authLoading) {
+  if (authLoading) {
+    return <div className="flex h-64 items-center justify-center text-navy-500">Cargando...</div>
+  }
+
+  const redirectPath = `/join/${codigo}`
+
+  if (!user) {
+    return (
+      <div className="mx-auto mt-16 max-w-sm px-4 text-center">
+        <h1 className="mb-2 font-display text-2xl text-navy-900">Te invitaron a un amigo secreto</h1>
+        <p className="mb-6 text-navy-600">
+          Inicia sesión o crea una cuenta para ver los detalles del evento y unirte.
+        </p>
+        <div className="flex flex-col gap-2">
+          <Link to={`/signup?redirect=${encodeURIComponent(redirectPath)}`} className="btn-primary">
+            Crear cuenta para unirme
+          </Link>
+          <Link to={`/login?redirect=${encodeURIComponent(redirectPath)}`} className="btn-ghost">
+            Ya tengo cuenta
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (loadingPreview) {
     return <div className="flex h-64 items-center justify-center text-navy-500">Cargando...</div>
   }
 
@@ -49,7 +76,7 @@ export function JoinBuyerPage() {
     )
   }
 
-  const redirectPath = `/join/${codigo}`
+  const eventoLleno = preview.modo === 'ultra_secreto' && preview.participantes_count >= MAX_PARTICIPANTES_ULTRA_SECRETO
 
   return (
     <div className="mx-auto mt-16 max-w-sm px-4 text-center">
@@ -61,26 +88,16 @@ export function JoinBuyerPage() {
         <p className="text-sm text-navy-500">El sorteo ya se realizó, no puedes unirte a este evento.</p>
       ) : preview.estado !== 'activo' ? (
         <p className="text-sm text-navy-500">Este evento ya no está aceptando participantes.</p>
+      ) : eventoLleno ? (
+        <p className="text-sm text-navy-500">
+          Este evento ya alcanzó el máximo de {MAX_PARTICIPANTES_ULTRA_SECRETO} participantes.
+        </p>
       ) : (
         <>
           {error && <p className="mb-4 text-sm text-error">{error}</p>}
-          {user ? (
-            <button onClick={handleJoin} disabled={joining} className="btn-primary w-full">
-              {joining ? 'Uniéndote...' : 'Unirme'}
-            </button>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <Link
-                to={`/signup?redirect=${encodeURIComponent(redirectPath)}`}
-                className="btn-primary"
-              >
-                Crear cuenta para unirme
-              </Link>
-              <Link to={`/login?redirect=${encodeURIComponent(redirectPath)}`} className="btn-ghost">
-                Ya tengo cuenta
-              </Link>
-            </div>
-          )}
+          <button onClick={handleJoin} disabled={joining} className="btn-primary w-full">
+            {joining ? 'Uniéndote...' : 'Unirme'}
+          </button>
         </>
       )}
     </div>

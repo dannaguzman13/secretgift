@@ -6,13 +6,14 @@ export interface ParticipanteConUsuario {
   usuario_id: string
   rol: string
   estado: string
-  usuario: { nombre: string; email: string } | null
+  created_at: string | null
+  usuario: { nombre: string } | null
 }
 
 export async function listarParticipantes(eventoId: string): Promise<ParticipanteConUsuario[]> {
   const { data, error } = await supabase
     .from('participantes')
-    .select('id, evento_id, usuario_id, rol, estado, usuario:usuarios(nombre, email)')
+    .select('id, evento_id, usuario_id, rol, estado, created_at, usuario:usuarios(nombre)')
     .eq('evento_id', eventoId)
   if (error) throw error
   return (data ?? []) as unknown as ParticipanteConUsuario[]

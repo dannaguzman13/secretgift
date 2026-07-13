@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      aliases: {
+        Row: {
+          alias: string
+          alias_index: number
+          created_at: string
+          evento_id: string
+          id: string
+          universo: string
+          usuario_id: string
+        }
+        Insert: {
+          alias: string
+          alias_index: number
+          created_at?: string
+          evento_id: string
+          id?: string
+          universo: string
+          usuario_id: string
+        }
+        Update: {
+          alias?: string
+          alias_index?: number
+          created_at?: string
+          evento_id?: string
+          id?: string
+          universo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aliases_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aliases_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asignaciones: {
         Row: {
           comprado_at: string | null
@@ -72,6 +117,55 @@ export type Database = {
           },
         ]
       }
+      estado_regalos: {
+        Row: {
+          comprador_original_id: string
+          dueno_actual_id: string
+          evento_id: string
+          id: string
+          regalo_numero: number
+          updated_at: string
+        }
+        Insert: {
+          comprador_original_id: string
+          dueno_actual_id: string
+          evento_id: string
+          id?: string
+          regalo_numero: number
+          updated_at?: string
+        }
+        Update: {
+          comprador_original_id?: string
+          dueno_actual_id?: string
+          evento_id?: string
+          id?: string
+          regalo_numero?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estado_regalos_comprador_original_id_fkey"
+            columns: ["comprador_original_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estado_regalos_dueno_actual_id_fkey"
+            columns: ["dueno_actual_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estado_regalos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eventos: {
         Row: {
           admin_id: string
@@ -81,9 +175,13 @@ export type Database = {
           fecha_compra: string
           fecha_revelacion: string
           id: string
+          juego_iniciado_at: string | null
+          modo: string
           nombre: string
           presupuesto: number
           sorteo_realizado_at: string | null
+          turno_actual: number
+          universo: string | null
           updated_at: string | null
         }
         Insert: {
@@ -94,9 +192,13 @@ export type Database = {
           fecha_compra: string
           fecha_revelacion: string
           id?: string
+          juego_iniciado_at?: string | null
+          modo?: string
           nombre: string
           presupuesto: number
           sorteo_realizado_at?: string | null
+          turno_actual?: number
+          universo?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -107,9 +209,13 @@ export type Database = {
           fecha_compra?: string
           fecha_revelacion?: string
           id?: string
+          juego_iniciado_at?: string | null
+          modo?: string
           nombre?: string
           presupuesto?: number
           sorteo_realizado_at?: string | null
+          turno_actual?: number
+          universo?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -206,6 +312,54 @@ export type Database = {
           },
         ]
       }
+      turnos_ruleta: {
+        Row: {
+          accion: string
+          created_at: string
+          detalles: Json
+          evento_id: string
+          id: string
+          numero_ruleta: number
+          numero_turno: number
+          participante_id: string
+        }
+        Insert: {
+          accion: string
+          created_at?: string
+          detalles?: Json
+          evento_id: string
+          id?: string
+          numero_ruleta: number
+          numero_turno: number
+          participante_id: string
+        }
+        Update: {
+          accion?: string
+          created_at?: string
+          detalles?: Json
+          evento_id?: string
+          id?: string
+          numero_ruleta?: number
+          numero_turno?: number
+          participante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turnos_ruleta_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turnos_ruleta_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuarios: {
         Row: {
           created_at: string | null
@@ -240,8 +394,10 @@ export type Database = {
           p_codigo_acceso: string
           p_fecha_compra: string
           p_fecha_revelacion: string
+          p_modo?: string
           p_nombre: string
           p_presupuesto: number
+          p_universo?: string
         }
         Returns: {
           admin_id: string
@@ -251,10 +407,20 @@ export type Database = {
           fecha_compra: string
           fecha_revelacion: string
           id: string
+          juego_iniciado_at: string | null
+          modo: string
           nombre: string
           presupuesto: number
           sorteo_realizado_at: string | null
+          turno_actual: number
+          universo: string | null
           updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "eventos"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       get_event_preview_by_code: {
@@ -263,14 +429,65 @@ export type Database = {
           estado: string
           fecha_compra: string
           id: string
+          modo: string
           nombre: string
+          participantes_count: number
           presupuesto: number
           sorteo_realizado_at: string
+          universo: string
         }[]
+      }
+      girar_ruleta: {
+        Args: { p_evento_id: string }
+        Returns: {
+          numero_ruleta: number
+          numero_turno: number
+        }[]
+      }
+      iniciar_juego_regalo_robado: {
+        Args: { p_evento_id: string }
+        Returns: undefined
       }
       is_event_member: { Args: { p_evento_id: string }; Returns: boolean }
       join_event_by_code: { Args: { p_codigo: string }; Returns: string }
+      listar_estado_compras: {
+        Args: { p_evento_id: string }
+        Returns: {
+          comprado_at: string
+          comprador_id: string
+          comprador_nombre: string
+          estado: string
+          id: string
+        }[]
+      }
       realizar_sorteo: { Args: { p_evento_id: string }; Returns: undefined }
+      realizar_sorteo_ultra_secreto: {
+        Args: { p_aliases: string[]; p_evento_id: string }
+        Returns: undefined
+      }
+      resolver_turno_ruleta: {
+        Args: {
+          p_evento_id: string
+          p_numero_turno: number
+          p_objetivo_ids?: string[]
+        }
+        Returns: {
+          accion: string
+          created_at: string
+          detalles: Json
+          evento_id: string
+          id: string
+          numero_ruleta: number
+          numero_turno: number
+          participante_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "turnos_ruleta"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       shares_event_with: { Args: { p_usuario_id: string }; Returns: boolean }
     }
     Enums: {
