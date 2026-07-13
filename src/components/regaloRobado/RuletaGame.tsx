@@ -39,6 +39,7 @@ export function RuletaGame({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [girando, setGirando] = useState(false)
+  const [numeroAnimado, setNumeroAnimado] = useState<number | null>(null)
   const [pendiente, setPendiente] = useState<{ numeroTurno: number; numeroRuleta: number; participanteId: string } | null>(null)
 
   const jugadorEnTurno = calcularTurnoActual(ordenTurnos, turnoActual)
@@ -75,11 +76,23 @@ export function RuletaGame({
     cargar()
   }, [cargar, turnoActual])
 
+  async function animarRuleta(numeroFinal: number) {
+    const delays = [70, 70, 80, 90, 110, 130, 160, 200, 250, 310, 380]
+    let actual = Math.floor(Math.random() * 5) + 1
+    for (let i = 0; i < delays.length; i++) {
+      actual = i === delays.length - 1 ? numeroFinal : (actual % 5) + 1
+      setNumeroAnimado(actual)
+      await new Promise((resolve) => setTimeout(resolve, delays[i]))
+    }
+  }
+
   async function handleGirar() {
     setGirando(true)
     setError(null)
     try {
       const resultado = await girarRuleta(eventoId)
+      await animarRuleta(resultado.numeroRuleta)
+
       const nuevoPendiente = {
         numeroTurno: resultado.numeroTurno,
         numeroRuleta: resultado.numeroRuleta,
@@ -98,6 +111,7 @@ export function RuletaGame({
       setError(getErrorMessage(err, 'No se pudo girar la ruleta'))
     } finally {
       setGirando(false)
+      setNumeroAnimado(null)
     }
   }
 
@@ -133,13 +147,25 @@ export function RuletaGame({
         <p className="text-xs font-bold tracking-wide text-navy-600 uppercase">Turno de</p>
         <p className="font-display text-xl text-navy-900">{jugadorEnTurno?.usuario?.nombre ?? '—'}</p>
 
-        {esMiTurno && !pendiente && (
+        {girando && (
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <div
+              key={numeroAnimado}
+              className="animate-roulette-tick flex h-20 w-20 items-center justify-center rounded-full border-4 border-coral-400 bg-pale-sky-50 font-display text-4xl text-navy-900"
+            >
+              {numeroAnimado ?? '—'}
+            </div>
+            <p className="text-sm text-navy-500">Girando...</p>
+          </div>
+        )}
+
+        {esMiTurno && !pendiente && !girando && (
           <button onClick={handleGirar} disabled={girando} className="btn-primary mt-4 w-full text-lg">
-            {girando ? 'Girando...' : '🎡 Girar ruleta'}
+            🎡 Girar ruleta
           </button>
         )}
 
-        {pendiente && (
+        {pendiente && !girando && (
           <div className="mt-4 flex flex-col gap-2 text-sm text-navy-600">
             <p>
               Salió {pendiente.numeroRuleta}: {RULETA_LABELS[pendiente.numeroRuleta]}
