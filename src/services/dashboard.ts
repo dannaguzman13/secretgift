@@ -7,6 +7,8 @@ import { obtenerPreferencias } from './preferencias'
 import { obtenerMiAlias, obtenerAliasDeUsuario } from './aliases'
 import { obtenerMiPerfil, obtenerPerfilUsuario } from './perfil'
 import type { Evento, Asignacion, Alias, Preferencias, Usuario, PerfilPublico } from '../types/domain'
+import { listarEstadoComprasRegaloRobado } from './regaloRobado'
+import type { EstadoCompraRegaloRobadoConUsuario } from './regaloRobado'
 
 export interface DashboardEventoData {
   evento: Evento
@@ -16,6 +18,7 @@ export interface DashboardEventoData {
   sorteoRealizado: boolean
   miAsignacion: Asignacion | null
   estadoCompras: AsignacionConComprador[]
+  estadoComprasRegaloRobado: EstadoCompraRegaloRobadoConUsuario[]
   wishlistDestino: Preferencias | null
   perfilDestino: PerfilPublico | null
   miAliasPropio: Alias | null
@@ -25,12 +28,14 @@ export interface DashboardEventoData {
 export async function obtenerDashboardEvento(eventoId: string, userId: string): Promise<DashboardEventoData> {
   const evento = await obtenerEventoDetalle(eventoId)
   const sorteoRealizado = !!evento.sorteo_realizado_at
+  const esRegaloRobado = evento.modo === 'regalo_robado'
 
-  const [participantes, miPerfil, miAsignacion, estadoCompras] = await Promise.all([
+  const [participantes, miPerfil, miAsignacion, estadoCompras, estadoComprasRegaloRobado] = await Promise.all([
     evento.modo === 'ultra_secreto' ? listarParticipantesUltraSecreto(eventoId) : listarParticipantes(eventoId),
     obtenerMiPerfil(userId),
-    sorteoRealizado ? obtenerMiAsignacion(eventoId) : Promise.resolve(null),
-    sorteoRealizado ? listarEstadoCompras(eventoId) : Promise.resolve([]),
+    !esRegaloRobado && sorteoRealizado ? obtenerMiAsignacion(eventoId) : Promise.resolve(null),
+    !esRegaloRobado && sorteoRealizado ? listarEstadoCompras(eventoId) : Promise.resolve([]),
+    esRegaloRobado ? listarEstadoComprasRegaloRobado(eventoId) : Promise.resolve([]),
   ])
 
   let wishlistDestino: Preferencias | null = null
@@ -61,6 +66,7 @@ export async function obtenerDashboardEvento(eventoId: string, userId: string): 
     sorteoRealizado,
     miAsignacion,
     estadoCompras,
+    estadoComprasRegaloRobado,
     wishlistDestino,
     perfilDestino,
     miAliasPropio,

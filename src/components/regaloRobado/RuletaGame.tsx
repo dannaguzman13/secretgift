@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
-import type { EstadoRegalo, TurnoRuleta } from '../../types/domain'
+import { useCallback, useEffect, useState } from 'react'
+import type { TurnoRuleta } from '../../types/domain'
 import type { ParticipanteConUsuario } from '../../services/participantes'
 import {
-  girarRuleta,
-  resolverTurno,
-  obtenerEstadoRegalos,
-  obtenerTurnos,
   calcularTurnoActual,
+  girarRuleta,
+  obtenerOrdenTurnosRegaloRobado,
+  obtenerTurnosRegaloRobado,
+  resolverTurno,
 } from '../../services/regaloRobado'
+import type { TurnoRegaloRobadoConUsuario } from '../../services/regaloRobado'
 import { PersonSelectModal } from './PersonSelectModal'
-import { GiftOwnershipGrid } from './GiftOwnershipGrid'
 import { TurnLog } from './TurnLog'
 import { getErrorMessage } from '../../utils/helpers'
 
@@ -34,39 +34,65 @@ export function RuletaGame({
   usuarioActualId: string
   onTurnoResuelto: () => Promise<void> | void
 }) {
-  const [estadoRegalos, setEstadoRegalos] = useState<EstadoRegalo[]>([])
+  const [ordenTurnos, setOrdenTurnos] = useState<TurnoRegaloRobadoConUsuario[]>([])
   const [turnos, setTurnos] = useState<TurnoRuleta[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [girando, setGirando] = useState(false)
-  const [pendiente, setPendiente] = useState<{ numeroTurno: number; numeroRuleta: number } | null>(null)
+  const [pendiente, setPendiente] = useState<{ numeroTurno: number; numeroRuleta: number; participanteId: string } | null>(null)
 
-  const jugadorEnTurno = calcularTurnoActual(participantes, turnoActual)
+  const jugadorEnTurno = calcularTurnoActual(ordenTurnos, turnoActual)
   const esMiTurno = jugadorEnTurno?.usuario_id === usuarioActualId
+  const pendienteEsMio = pendiente?.participanteId === usuarioActualId
 
-  function cargar() {
+  const cargar = useCallback(async () => {
     setLoading(true)
-    Promise.all([obtenerEstadoRegalos(eventoId), obtenerTurnos(eventoId)])
-      .then(([regalos, t]) => {
-        setEstadoRegalos(regalos)
-        setTurnos(t)
-      })
-      .finally(() => setLoading(false))
-  }
+    try {
+      const [orden, historial] = await Promise.all([
+        obtenerOrdenTurnosRegaloRobado(eventoId),
+        obtenerTurnosRegaloRobado(eventoId),
+      ])
+      const turnoPendiente = historial.find((turno) => turno.accion === 'pendiente')
+      setOrdenTurnos(orden)
+      setTurnos(historial)
+      setPendiente(
+        turnoPendiente
+          ? {
+              numeroTurno: turnoPendiente.numero_turno,
+              numeroRuleta: turnoPendiente.numero_ruleta,
+              participanteId: turnoPendiente.participante_id,
+            }
+          : null,
+      )
+    } catch (err) {
+      setError(getErrorMessage(err, 'No se pudo cargar la ruleta'))
+    } finally {
+      setLoading(false)
+    }
+  }, [eventoId])
 
-  useEffect(cargar, [eventoId, turnoActual])
+  useEffect(() => {
+    cargar()
+  }, [cargar, turnoActual])
 
   async function handleGirar() {
     setGirando(true)
     setError(null)
     try {
       const resultado = await girarRuleta(eventoId)
+      const nuevoPendiente = {
+        numeroTurno: resultado.numeroTurno,
+        numeroRuleta: resultado.numeroRuleta,
+        participanteId: usuarioActualId,
+      }
+
       if (resultado.numeroRuleta === 1 || resultado.numeroRuleta === 2) {
         await resolverTurno(eventoId, resultado.numeroTurno, null)
-        cargar()
+        await cargar()
         await onTurnoResuelto()
       } else {
-        setPendiente(resultado)
+        setPendiente(nuevoPendiente)
+        await cargar()
       }
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo girar la ruleta'))
@@ -81,14 +107,14 @@ export function RuletaGame({
     try {
       await resolverTurno(eventoId, pendiente.numeroTurno, usuarioIds)
       setPendiente(null)
-      cargar()
+      await cargar()
       await onTurnoResuelto()
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo resolver el turno'))
     }
   }
 
-  if (loading) return <p className="text-navy-500">Cargando juego...</p>
+  if (loading) return <p className="text-navy-500">Cargando ruleta...</p>
 
   const modalConfig =
     pendiente?.numeroRuleta === 3
@@ -100,27 +126,50 @@ export function RuletaGame({
           : null
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {error && <p className="text-sm text-error">{error}</p>}
-      <div className="card text-center">
+
+      <div className="rounded-lg border-2 border-pale-sky-200 bg-white p-4 text-center">
         <p className="text-xs font-bold tracking-wide text-navy-600 uppercase">Turno de</p>
         <p className="font-display text-xl text-navy-900">{jugadorEnTurno?.usuario?.nombre ?? '—'}</p>
+
         {esMiTurno && !pendiente && (
           <button onClick={handleGirar} disabled={girando} className="btn-primary mt-4 w-full text-lg">
             {girando ? 'Girando...' : '🎡 Girar ruleta'}
           </button>
         )}
+
         {pendiente && (
-          <p className="mt-4 text-sm text-navy-600">
-            Salió {pendiente.numeroRuleta}: {RULETA_LABELS[pendiente.numeroRuleta]}
-          </p>
+          <div className="mt-4 flex flex-col gap-2 text-sm text-navy-600">
+            <p>
+              Salió {pendiente.numeroRuleta}: {RULETA_LABELS[pendiente.numeroRuleta]}
+            </p>
+            <p>Realiza esta acción con los regalos físicos en la reunión.</p>
+          </div>
         )}
+
         {!esMiTurno && !pendiente && <p className="mt-4 text-sm text-navy-500">Esperando a que gire...</p>}
+        {pendiente && !pendienteEsMio && (
+          <p className="mt-4 text-sm text-navy-500">Esperando a que se confirme la acción...</p>
+        )}
       </div>
 
       <div>
-        <h2 className="mb-2 text-xs font-bold tracking-wide text-navy-600 uppercase">Estado de los regalos</h2>
-        <GiftOwnershipGrid estadoRegalos={estadoRegalos} participantes={participantes} />
+        <h2 className="mb-2 text-xs font-bold tracking-wide text-navy-600 uppercase">Orden de turnos</h2>
+        <ol className="grid gap-2 sm:grid-cols-2">
+          {ordenTurnos.map((turno) => (
+            <li
+              key={turno.id}
+              className={`rounded-md border-2 px-3 py-2 text-sm ${
+                turno.usuario_id === jugadorEnTurno?.usuario_id
+                  ? 'border-coral-400 bg-coral-50 text-navy-900'
+                  : 'border-pale-sky-200 bg-white text-navy-600'
+              }`}
+            >
+              <span className="font-bold">{turno.orden + 1}.</span> {turno.usuario?.nombre ?? turno.usuario_id}
+            </li>
+          ))}
+        </ol>
       </div>
 
       <div>
@@ -128,7 +177,7 @@ export function RuletaGame({
         <TurnLog turnos={turnos} participantes={participantes} />
       </div>
 
-      {pendiente && modalConfig && esMiTurno && (
+      {pendiente && modalConfig && pendienteEsMio && (
         <PersonSelectModal
           participantes={participantes}
           excluirUsuarioId={pendiente.numeroRuleta === 3 ? usuarioActualId : undefined}

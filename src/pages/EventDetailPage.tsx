@@ -131,7 +131,7 @@ export function EventDetailPage() {
           participantes={participantes as ParticipanteConUsuario[]}
           user={user}
           isAdmin={isAdmin}
-          onSorteoRealizado={refetchEvento}
+          onEventoActualizado={refetchEvento}
         />
       )}
     </div>

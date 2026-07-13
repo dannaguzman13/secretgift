@@ -186,6 +186,7 @@ export type Database = {
           requisitos: string | null
           restricciones: string | null
           sorteo_realizado_at: string | null
+          status: string
           tematica: string | null
           turno_actual: number
           universo: string | null
@@ -210,6 +211,7 @@ export type Database = {
           requisitos?: string | null
           restricciones?: string | null
           sorteo_realizado_at?: string | null
+          status?: string
           tematica?: string | null
           turno_actual?: number
           universo?: string | null
@@ -234,6 +236,7 @@ export type Database = {
           requisitos?: string | null
           restricciones?: string | null
           sorteo_realizado_at?: string | null
+          status?: string
           tematica?: string | null
           turno_actual?: number
           universo?: string | null
@@ -284,6 +287,90 @@ export type Database = {
           },
           {
             foreignKeyName: "participantes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regalo_robado_compras: {
+        Row: {
+          comprado_at: string | null
+          created_at: string
+          estado: string
+          evento_id: string
+          id: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          comprado_at?: string | null
+          created_at?: string
+          estado?: string
+          evento_id: string
+          id?: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          comprado_at?: string | null
+          created_at?: string
+          estado?: string
+          evento_id?: string
+          id?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regalo_robado_compras_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regalo_robado_compras_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regalo_robado_turnos: {
+        Row: {
+          created_at: string
+          evento_id: string
+          id: string
+          orden: number
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          evento_id: string
+          id?: string
+          orden: number
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          evento_id?: string
+          id?: string
+          orden?: number
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regalo_robado_turnos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regalo_robado_turnos_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
@@ -419,6 +506,58 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activar_intercambio_regalo_robado: {
+        Args: { p_evento_id: string }
+        Returns: {
+          admin_id: string
+          codigo_acceso: string
+          created_at: string | null
+          descripcion: string | null
+          emoji: string | null
+          estado: string
+          fecha_compra: string
+          fecha_intercambio: string
+          id: string
+          juego_iniciado_at: string | null
+          modo: string
+          nombre: string
+          presupuesto_moneda: string
+          presupuesto_monto: number
+          recomendacion: string | null
+          requisitos: string | null
+          restricciones: string | null
+          sorteo_realizado_at: string | null
+          status: string
+          tematica: string | null
+          turno_actual: number
+          universo: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "eventos"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      actualizar_mi_estado_compra_regalo_robado: {
+        Args: { p_estado: string; p_evento_id: string }
+        Returns: {
+          comprado_at: string | null
+          created_at: string
+          estado: string
+          evento_id: string
+          id: string
+          updated_at: string
+          usuario_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "regalo_robado_compras"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       crear_evento_con_admin: {
         Args: {
           p_codigo_acceso: string
@@ -455,6 +594,7 @@ export type Database = {
           requisitos: string | null
           restricciones: string | null
           sorteo_realizado_at: string | null
+          status: string
           tematica: string | null
           turno_actual: number
           universo: string | null
@@ -496,6 +636,19 @@ export type Database = {
       }
       is_event_member: { Args: { p_evento_id: string }; Returns: boolean }
       join_event_by_code: { Args: { p_codigo: string }; Returns: string }
+      listar_estado_compras_regalo_robado: {
+        Args: { p_evento_id: string }
+        Returns: {
+          comprado_at: string | null
+          created_at: string
+          estado: string
+          evento_id: string
+          id: string
+          updated_at: string
+          usuario_id: string
+          usuario_nombre: string
+        }[]
+      }
       listar_estado_compras: {
         Args: { p_evento_id: string }
         Returns: {

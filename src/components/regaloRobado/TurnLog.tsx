@@ -2,11 +2,11 @@ import type { TurnoRuleta } from '../../types/domain'
 import type { ParticipanteConUsuario } from '../../services/participantes'
 
 const ACCION_LABELS: Record<string, string> = {
-  girar_derecha: 'giró la ruleta y todos los regalos rotaron a la derecha',
-  girar_izquierda: 'giró la ruleta y todos los regalos rotaron a la izquierda',
-  intercambiar: 'intercambió su regalo con otra persona',
-  elegir_2: 'eligió a 2 personas para intercambiar sus regalos',
-  cambios_multiples: 'hizo rotar los regalos entre 3 o más personas',
+  girar_derecha: 'debe hacer que los regalos físicos roten a la derecha',
+  girar_izquierda: 'debe hacer que los regalos físicos roten a la izquierda',
+  intercambiar: 'debe intercambiar físicamente con otra persona',
+  elegir_2: 'eligió a 2 personas para que intercambien físicamente sus regalos',
+  cambios_multiples: 'eligió a 3 o más personas para rotar físicamente sus regalos',
   pendiente: 'está decidiendo su jugada...',
 }
 

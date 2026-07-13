@@ -20,8 +20,12 @@ export type Asignacion = Tables<'asignaciones'>
 export type Alias = Tables<'aliases'>
 export type EstadoRegalo = Tables<'estado_regalos'>
 export type TurnoRuleta = Tables<'turnos_ruleta'>
+export type RegaloRobadoCompra = Tables<'regalo_robado_compras'>
+export type RegaloRobadoTurno = Tables<'regalo_robado_turnos'>
 
 export type ModoEvento = 'amigo_secreto' | 'ultra_secreto' | 'regalo_robado'
+export type EventoStatus = 'registro_abierto' | 'ruleta_activa'
+export type EstadoCompraRegaloRobado = 'pendiente' | 'comprado'
 
 export type Universo =
   | 'marvel'

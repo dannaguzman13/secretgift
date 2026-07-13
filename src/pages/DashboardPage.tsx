@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { obtenerMisEventos } from '../services/eventos'
 import { obtenerDashboardEvento } from '../services/dashboard'
 import type { DashboardEventoData } from '../services/dashboard'
+import { actualizarMiEstadoCompra, listarEstadoComprasRegaloRobado } from '../services/regaloRobado'
+import { supabase } from '../services/supabase'
 import { DashboardSidebar } from '../components/dashboard/DashboardSidebar'
 import { EventInfoCard } from '../components/dashboard/EventInfoCard'
 import { ModeBlock } from '../components/dashboard/ModeBlock'
 import { ParticipantsBlock } from '../components/dashboard/ParticipantsBlock'
+import { RuletaModal } from '../components/regaloRobado/RuletaModal'
+import type { ParticipanteConUsuario } from '../services/participantes'
 import type { Evento } from '../types/domain'
 import { getErrorMessage } from '../utils/helpers'
 
@@ -23,6 +27,9 @@ export function DashboardPage() {
   const [data, setData] = useState<DashboardEventoData | null>(null)
   const [loadingData, setLoadingData] = useState(false)
   const [dataError, setDataError] = useState<string | null>(null)
+  const [ruletaModalOpen, setRuletaModalOpen] = useState(false)
+  const [actualizandoCompraUsuarioId, setActualizandoCompraUsuarioId] = useState<string | null>(null)
+  const eventoStatusRef = useRef<string | null>(null)
 
   useEffect(() => {
     obtenerMisEventos()
@@ -48,6 +55,67 @@ export function DashboardPage() {
       .catch((err) => setDataError(getErrorMessage(err, 'No se pudo cargar este evento')))
       .finally(() => setLoadingData(false))
   }, [eventoId, user])
+
+  useEffect(() => {
+    setRuletaModalOpen(false)
+    eventoStatusRef.current = null
+  }, [eventoId])
+
+  useEffect(() => {
+    eventoStatusRef.current = data?.evento.status ?? null
+  }, [data?.evento.status])
+
+  useEffect(() => {
+    if (!eventoId || !user) return
+
+    const channel = supabase
+      .channel(`evento-${eventoId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'eventos', filter: `id=eq.${eventoId}` },
+        (payload) => {
+          const eventoActualizado = payload.new as Evento
+          const debeAbrirRuleta =
+            eventoActualizado.modo === 'regalo_robado' &&
+            eventoActualizado.status === 'ruleta_activa' &&
+            eventoStatusRef.current !== 'ruleta_activa'
+
+          eventoStatusRef.current = eventoActualizado.status
+          setData((prev) => (prev ? { ...prev, evento: eventoActualizado } : prev))
+          setEventos((prev) => prev.map((evento) => (evento.id === eventoActualizado.id ? eventoActualizado : evento)))
+
+          if (debeAbrirRuleta) {
+            setRuletaModalOpen(true)
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [eventoId, user])
+
+  async function handleActualizarEstadoCompra(usuarioId: string, estado: 'pendiente' | 'comprado') {
+    if (!eventoId || !data) return
+    setActualizandoCompraUsuarioId(usuarioId)
+    setDataError(null)
+    try {
+      await actualizarMiEstadoCompra(eventoId, estado)
+      const estadoComprasRegaloRobado = await listarEstadoComprasRegaloRobado(eventoId)
+      setData((prev) => (prev ? { ...prev, estadoComprasRegaloRobado } : prev))
+    } catch (err) {
+      setDataError(getErrorMessage(err, 'No se pudo actualizar tu estado de compra'))
+    } finally {
+      setActualizandoCompraUsuarioId(null)
+    }
+  }
+
+  function handleRegaloRobadoActivado(evento: Evento) {
+    setData((prev) => (prev ? { ...prev, evento } : prev))
+    setEventos((prev) => prev.map((item) => (item.id === evento.id ? evento : item)))
+    setRuletaModalOpen(true)
+  }
 
   if (loadingEventos) {
     return <div className="flex h-64 items-center justify-center text-navy-500">Cargando...</div>
@@ -86,14 +154,35 @@ export function DashboardPage() {
                 participantesCount={data.participantesCount}
                 onEventoActualizado={(evento) => setData((prev) => (prev ? { ...prev, evento } : prev))}
               />
-              <ModeBlock data={data} />
+              <ModeBlock
+                data={data}
+                currentUserId={user?.id ?? ''}
+                onRegaloRobadoActivado={handleRegaloRobadoActivado}
+                onOpenRuleta={() => setRuletaModalOpen(true)}
+              />
               <ParticipantsBlock
                 modo={data.evento.modo}
                 sorteoRealizado={data.sorteoRealizado}
-                juego_iniciado_at={data.evento.juego_iniciado_at}
+                userId={user?.id ?? ''}
                 estadoCompras={data.estadoCompras}
+                estadoComprasRegaloRobado={data.estadoComprasRegaloRobado}
                 participantes={data.participantes}
+                actualizandoCompraUsuarioId={actualizandoCompraUsuarioId}
+                onActualizarEstadoCompra={handleActualizarEstadoCompra}
               />
+              {data.evento.modo === 'regalo_robado' && data.evento.status === 'ruleta_activa' && ruletaModalOpen && (
+                <RuletaModal
+                  evento={data.evento}
+                  participantes={data.participantes as ParticipanteConUsuario[]}
+                  usuarioActualId={user?.id ?? ''}
+                  onClose={() => setRuletaModalOpen(false)}
+                  onTurnoResuelto={async () => {
+                    if (!eventoId || !user) return
+                    const updated = await obtenerDashboardEvento(eventoId, user.id)
+                    setData(updated)
+                  }}
+                />
+              )}
             </>
           )}
         </div>
