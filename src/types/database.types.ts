@@ -362,24 +362,33 @@ export type Database = {
       }
       usuarios: {
         Row: {
+          apodo: string | null
           created_at: string | null
+          descripcion: string | null
           email: string
           id: string
           nombre: string
+          perfil_completo: Json
           updated_at: string | null
         }
         Insert: {
+          apodo?: string | null
           created_at?: string | null
+          descripcion?: string | null
           email: string
           id: string
           nombre: string
+          perfil_completo?: Json
           updated_at?: string | null
         }
         Update: {
+          apodo?: string | null
           created_at?: string | null
+          descripcion?: string | null
           email?: string
           id?: string
           nombre?: string
+          perfil_completo?: Json
           updated_at?: string | null
         }
         Relationships: []

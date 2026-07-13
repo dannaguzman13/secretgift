@@ -1,6 +1,18 @@
 import type { Tables } from './database.types'
+import type { CampoPerfilId } from '../utils/perfilCampos'
 
 export type Usuario = Tables<'usuarios'>
+
+export type PerfilCompleto = {
+  campos_activos: CampoPerfilId[]
+} & Partial<Record<CampoPerfilId, string>>
+
+export type PerfilPublico = {
+  nombre: string
+  apodo: string | null
+  descripcion: string | null
+  campos: Partial<Record<CampoPerfilId, string>>
+}
 export type Evento = Tables<'eventos'>
 export type Participante = Tables<'participantes'>
 export type Preferencias = Tables<'preferencias'>
