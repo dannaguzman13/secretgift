@@ -24,7 +24,7 @@ export async function crearEvento(input: CrearEventoInput) {
       p_fecha_revelacion: input.fechaRevelacion,
       p_codigo_acceso: generateCodigo(),
       p_modo: input.modo,
-      p_universo: input.universo ?? null,
+      p_universo: input.universo,
     })
 
     if (!error) {
