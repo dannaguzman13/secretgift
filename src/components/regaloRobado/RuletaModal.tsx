@@ -17,7 +17,7 @@ export function RuletaModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/60 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg bg-cream shadow-xl">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg border-2 border-navy-800 bg-pale-sky-50 shadow-xl">
         <div className="flex items-center justify-between border-b border-pale-sky-200 px-4 py-3">
           <div>
             <p className="text-xs font-bold tracking-wide text-navy-500 uppercase">Regalo Robado</p>
