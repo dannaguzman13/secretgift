@@ -5,6 +5,7 @@ import { validarFechaIntercambio } from '../../utils/fechaIntercambio'
 import { getErrorMessage } from '../../utils/helpers'
 import type { Evento } from '../../types/domain'
 import { PresupuestoInput } from './PresupuestoInput'
+import { InviteLinkBox } from './InviteLinkBox'
 
 function pad(n: number): string {
   return String(n).padStart(2, '0')
@@ -149,6 +150,15 @@ export function EditarEventoModal({
                 </div>
               </div>
             </div>
+            {!evento.juego_iniciado_at && (
+              <div className="border-t border-pale-sky-200 pt-4">
+                <h4 className="mb-3 text-xs font-bold tracking-wide text-navy-600 uppercase">Compartir evento</h4>
+                <InviteLinkBox
+                  label="Enlace de invitación"
+                  url={`${window.location.origin}/join/${evento.codigo_acceso}`}
+                />
+              </div>
+            )}
           </div>
         </div>
 

@@ -88,7 +88,9 @@ export function DashboardPage() {
               />
               <ModeBlock data={data} />
               <ParticipantsBlock
+                modo={data.evento.modo}
                 sorteoRealizado={data.sorteoRealizado}
+                juego_iniciado_at={data.evento.juego_iniciado_at}
                 estadoCompras={data.estadoCompras}
                 participantes={data.participantes}
               />
