@@ -7,9 +7,11 @@ import { getErrorMessage } from '../../utils/helpers'
 export function EditarPerfilModal({
   usuarioId,
   onClose,
+  onGuardado,
 }: {
   usuarioId: string
   onClose: () => void
+  onGuardado?: (usuario: { nombre: string; apodo: string | null }) => void
 }) {
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
@@ -69,12 +71,15 @@ export function EditarPerfilModal({
         if (valor) perfilCompleto[id] = valor
       }
 
+      const nombreGuardado = nombre.trim()
+      const apodoGuardado = apodo.trim() || null
       await actualizarPerfil(usuarioId, {
-        nombre: nombre.trim(),
-        apodo: apodo.trim() || null,
+        nombre: nombreGuardado,
+        apodo: apodoGuardado,
         descripcion: descripcion.trim() || null,
         perfil_completo: perfilCompleto,
       })
+      onGuardado?.({ nombre: nombreGuardado, apodo: apodoGuardado })
       onClose()
     } catch (err) {
       setError(getErrorMessage(err))
