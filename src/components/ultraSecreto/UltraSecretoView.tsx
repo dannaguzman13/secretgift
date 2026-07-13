@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { realizarSorteoUltraSecreto, marcarEventoCompletado } from '../../services/eventos'
 import { obtenerAliasDeUsuario } from '../../services/aliases'
-import type { ParticipanteConUsuario } from '../../services/participantes'
+import type { ParticipanteUltraSecreto } from '../../services/participantes'
 import { WishlistForm } from '../wishlist/WishlistForm'
 import { AssignmentRevealCard } from '../asignaciones/AssignmentRevealCard'
 import { BuyerStatusTable } from '../asignaciones/BuyerStatusTable'
@@ -24,7 +24,7 @@ export function UltraSecretoView({
   onSorteoRealizado,
 }: {
   evento: Evento
-  participantes: ParticipanteConUsuario[]
+  participantes: ParticipanteUltraSecreto[]
   user: User
   isAdmin: boolean
   isCompletado: boolean

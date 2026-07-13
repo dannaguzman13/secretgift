@@ -469,6 +469,30 @@ export type Database = {
           id: string
         }[]
       }
+      listar_participantes_convencional: {
+        Args: { p_evento_id: string }
+        Returns: {
+          created_at: string
+          estado: string
+          evento_id: string
+          id: string
+          rol: string
+          usuario_id: string
+          usuario_nombre: string
+        }[]
+      }
+      listar_participantes_ultra_secreto: {
+        Args: { p_evento_id: string }
+        Returns: {
+          alias: string
+          created_at: string
+          estado: string
+          evento_id: string
+          id: string
+          rol: string
+          usuario_id: string
+        }[]
+      }
       realizar_sorteo: { Args: { p_evento_id: string }; Returns: undefined }
       realizar_sorteo_ultra_secreto: {
         Args: { p_aliases: string[]; p_evento_id: string }

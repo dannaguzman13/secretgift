@@ -10,6 +10,16 @@ export interface ParticipanteConUsuario {
   usuario: { nombre: string } | null
 }
 
+export interface ParticipanteUltraSecreto {
+  id: string
+  evento_id: string
+  usuario_id: string
+  rol: string
+  estado: string
+  created_at: string | null
+  alias: string | null
+}
+
 export async function listarParticipantes(eventoId: string): Promise<ParticipanteConUsuario[]> {
   const { data, error } = await supabase
     .from('participantes')
@@ -17,6 +27,14 @@ export async function listarParticipantes(eventoId: string): Promise<Participant
     .eq('evento_id', eventoId)
   if (error) throw error
   return (data ?? []) as unknown as ParticipanteConUsuario[]
+}
+
+export async function listarParticipantesUltraSecreto(eventoId: string): Promise<ParticipanteUltraSecreto[]> {
+  const { data, error } = await supabase.rpc('listar_participantes_ultra_secreto', {
+    p_evento_id: eventoId,
+  })
+  if (error) throw error
+  return (data ?? []) as ParticipanteUltraSecreto[]
 }
 
 export async function obtenerMiParticipacion(eventoId: string) {

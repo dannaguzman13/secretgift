@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { obtenerEventoDetalle } from '../services/eventos'
 import { obtenerMiAsignacion } from '../services/asignaciones'
-import { listarParticipantes } from '../services/participantes'
-import type { ParticipanteConUsuario } from '../services/participantes'
+import { listarParticipantes, listarParticipantesUltraSecreto } from '../services/participantes'
+import type { ParticipanteConUsuario, ParticipanteUltraSecreto } from '../services/participantes'
 import { InviteLinkBox } from '../components/eventos/InviteLinkBox'
 import { AmigoSecretoView } from '../components/eventos/AmigoSecretoView'
 import { UltraSecretoView } from '../components/ultraSecreto/UltraSecretoView'
@@ -21,7 +21,7 @@ export function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const [evento, setEvento] = useState<Evento | null>(null)
-  const [participantes, setParticipantes] = useState<ParticipanteConUsuario[]>([])
+  const [participantes, setParticipantes] = useState<ParticipanteConUsuario[] | ParticipanteUltraSecreto[]>([])
   const [miAsignacion, setMiAsignacion] = useState<Asignacion | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,9 +30,13 @@ export function EventDetailPage() {
     if (!id) return
     setLoading(true)
     setError(null)
-    Promise.all([obtenerEventoDetalle(id), listarParticipantes(id)])
-      .then(([eventoData, participantesData]) => {
+    obtenerEventoDetalle(id)
+      .then(async (eventoData) => {
         setEvento(eventoData)
+        const participantesData =
+          eventoData.modo === 'ultra_secreto'
+            ? await listarParticipantesUltraSecreto(id)
+            : await listarParticipantes(id)
         setParticipantes(participantesData)
       })
       .catch(() => setError('No se pudo cargar este evento, o no tienes acceso a él.'))
@@ -53,10 +57,11 @@ export function EventDetailPage() {
 
   async function refetchEvento() {
     if (!id) return
-    const [eventoData, participantesData] = await Promise.all([
-      obtenerEventoDetalle(id),
-      listarParticipantes(id),
-    ])
+    const eventoData = await obtenerEventoDetalle(id)
+    const participantesData =
+      eventoData.modo === 'ultra_secreto'
+        ? await listarParticipantesUltraSecreto(id)
+        : await listarParticipantes(id)
     setEvento(eventoData)
     setParticipantes(participantesData)
   }
@@ -97,7 +102,7 @@ export function EventDetailPage() {
       {evento.modo === 'amigo_secreto' && (
         <AmigoSecretoView
           evento={evento}
-          participantes={participantes}
+          participantes={participantes as ParticipanteConUsuario[]}
           user={user}
           isAdmin={isAdmin}
           isCompletado={isCompletado}
@@ -109,7 +114,7 @@ export function EventDetailPage() {
       {evento.modo === 'ultra_secreto' && (
         <UltraSecretoView
           evento={evento}
-          participantes={participantes}
+          participantes={participantes as ParticipanteUltraSecreto[]}
           user={user}
           isAdmin={isAdmin}
           isCompletado={isCompletado}
@@ -121,7 +126,7 @@ export function EventDetailPage() {
       {evento.modo === 'regalo_robado' && (
         <RegaloRobadoView
           evento={evento}
-          participantes={participantes}
+          participantes={participantes as ParticipanteConUsuario[]}
           user={user}
           isAdmin={isAdmin}
           onSorteoRealizado={refetchEvento}
