@@ -5,5 +5,3 @@ export type Evento = Tables<'eventos'>
 export type Participante = Tables<'participantes'>
 export type Preferencias = Tables<'preferencias'>
 export type Asignacion = Tables<'asignaciones'>
-
-export type Rol = 'admin' | 'receptor' | 'comprador'

@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -21,6 +23,7 @@ export type Database = {
           evento_id: string
           id: string
           nota_comprador: string | null
+          receptor_id: string
           updated_at: string | null
         }
         Insert: {
@@ -31,6 +34,7 @@ export type Database = {
           evento_id: string
           id?: string
           nota_comprador?: string | null
+          receptor_id: string
           updated_at?: string | null
         }
         Update: {
@@ -41,6 +45,7 @@ export type Database = {
           evento_id?: string
           id?: string
           nota_comprador?: string | null
+          receptor_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -58,6 +63,13 @@ export type Database = {
             referencedRelation: "eventos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "asignaciones_receptor_id_fkey"
+            columns: ["receptor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
         ]
       }
       eventos: {
@@ -71,9 +83,7 @@ export type Database = {
           id: string
           nombre: string
           presupuesto: number
-          receptor_email: string
-          receptor_id: string | null
-          receptor_nombre: string
+          sorteo_realizado_at: string | null
           updated_at: string | null
         }
         Insert: {
@@ -86,9 +96,7 @@ export type Database = {
           id?: string
           nombre: string
           presupuesto: number
-          receptor_email: string
-          receptor_id?: string | null
-          receptor_nombre: string
+          sorteo_realizado_at?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -101,9 +109,7 @@ export type Database = {
           id?: string
           nombre?: string
           presupuesto?: number
-          receptor_email?: string
-          receptor_id?: string | null
-          receptor_nombre?: string
+          sorteo_realizado_at?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -112,39 +118,6 @@ export type Database = {
             columns: ["admin_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "eventos_receptor_id_fkey"
-            columns: ["receptor_id"]
-            isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      eventos_receptor_tokens: {
-        Row: {
-          created_at: string | null
-          evento_id: string
-          token: string
-        }
-        Insert: {
-          created_at?: string | null
-          evento_id: string
-          token?: string
-        }
-        Update: {
-          created_at?: string | null
-          evento_id?: string
-          token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "eventos_receptor_tokens_evento_id_fkey"
-            columns: ["evento_id"]
-            isOneToOne: true
-            referencedRelation: "eventos"
             referencedColumns: ["id"]
           },
         ]
@@ -198,6 +171,7 @@ export type Database = {
           evento_id: string
           restricciones: string | null
           updated_at: string | null
+          usuario_id: string
         }
         Insert: {
           created_at?: string | null
@@ -205,6 +179,7 @@ export type Database = {
           evento_id: string
           restricciones?: string | null
           updated_at?: string | null
+          usuario_id: string
         }
         Update: {
           created_at?: string | null
@@ -212,13 +187,21 @@ export type Database = {
           evento_id?: string
           restricciones?: string | null
           updated_at?: string | null
+          usuario_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "preferencias_evento_id_fkey"
             columns: ["evento_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preferencias_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]
@@ -252,7 +235,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_receptor: { Args: { p_token: string }; Returns: string }
+      crear_evento_con_admin: {
+        Args: {
+          p_codigo_acceso: string
+          p_fecha_compra: string
+          p_fecha_revelacion: string
+          p_nombre: string
+          p_presupuesto: number
+        }
+        Returns: {
+          admin_id: string
+          codigo_acceso: string
+          created_at: string | null
+          estado: string
+          fecha_compra: string
+          fecha_revelacion: string
+          id: string
+          nombre: string
+          presupuesto: number
+          sorteo_realizado_at: string | null
+          updated_at: string | null
+        }
+      }
       get_event_preview_by_code: {
         Args: { p_codigo: string }
         Returns: {
@@ -261,19 +265,12 @@ export type Database = {
           id: string
           nombre: string
           presupuesto: number
-        }[]
-      }
-      get_event_preview_by_token: {
-        Args: { p_token: string }
-        Returns: {
-          id: string
-          nombre: string
-          presupuesto: number
-          receptor_nombre: string
+          sorteo_realizado_at: string
         }[]
       }
       is_event_member: { Args: { p_evento_id: string }; Returns: boolean }
       join_event_by_code: { Args: { p_codigo: string }; Returns: string }
+      realizar_sorteo: { Args: { p_evento_id: string }; Returns: undefined }
       shares_event_with: { Args: { p_usuario_id: string }; Returns: boolean }
     }
     Enums: {

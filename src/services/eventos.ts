@@ -1,5 +1,4 @@
 import { supabase } from './supabase'
-import { enviarInvitacionReceptor } from './email'
 import type { Evento } from '../types/domain'
 
 function generateCodigo(): string {
@@ -9,34 +8,20 @@ function generateCodigo(): string {
 export interface CrearEventoInput {
   nombre: string
   presupuesto: number
-  receptorNombre: string
-  receptorEmail: string
   fechaCompra: string
   fechaRevelacion: string
 }
 
 export async function crearEvento(input: CrearEventoInput) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
-
   let evento: Evento | null = null
   for (let attempt = 0; attempt < 3; attempt++) {
-    const { data, error } = await supabase
-      .from('eventos')
-      .insert({
-        admin_id: user.id,
-        nombre: input.nombre,
-        presupuesto: input.presupuesto,
-        receptor_nombre: input.receptorNombre,
-        receptor_email: input.receptorEmail,
-        fecha_compra: input.fechaCompra,
-        fecha_revelacion: input.fechaRevelacion,
-        codigo_acceso: generateCodigo(),
-      })
-      .select()
-      .single()
+    const { data, error } = await supabase.rpc('crear_evento_con_admin', {
+      p_nombre: input.nombre,
+      p_presupuesto: input.presupuesto,
+      p_fecha_compra: input.fechaCompra,
+      p_fecha_revelacion: input.fechaRevelacion,
+      p_codigo_acceso: generateCodigo(),
+    })
 
     if (!error) {
       evento = data
@@ -46,24 +31,7 @@ export async function crearEvento(input: CrearEventoInput) {
   }
   if (!evento) throw new Error('No se pudo generar un código de acceso único')
 
-  const { data: tokenRow, error: tokenError } = await supabase
-    .from('eventos_receptor_tokens')
-    .insert({ evento_id: evento.id })
-    .select('token')
-    .single()
-  if (tokenError) throw tokenError
-
-  try {
-    await enviarInvitacionReceptor({
-      email: input.receptorEmail,
-      eventoNombre: input.nombre,
-      token: tokenRow.token,
-    })
-  } catch (err) {
-    console.warn('No se pudo enviar el email de invitación al receptor', err)
-  }
-
-  return { evento, receptorToken: tokenRow.token }
+  return { evento }
 }
 
 export async function obtenerMisEventos(): Promise<Evento[]> {
@@ -99,38 +67,21 @@ export async function getEventPreviewByCode(codigo: string) {
   return data?.[0] ?? null
 }
 
-export async function getEventPreviewByToken(token: string) {
-  const { data, error } = await supabase.rpc('get_event_preview_by_token', { p_token: token })
-  if (error) throw error
-  return data?.[0] ?? null
-}
-
 export async function joinEventByCode(codigo: string): Promise<string> {
   const { data, error } = await supabase.rpc('join_event_by_code', { p_codigo: codigo })
   if (error) throw error
   return data
 }
 
-export async function claimReceptor(token: string): Promise<string> {
-  const { data, error } = await supabase.rpc('claim_receptor', { p_token: token })
+export async function realizarSorteo(eventoId: string): Promise<void> {
+  const { error } = await supabase.rpc('realizar_sorteo', { p_evento_id: eventoId })
   if (error) throw error
-  return data
 }
 
 export async function obtenerEventoDetalle(eventoId: string): Promise<Evento> {
   const { data, error } = await supabase.from('eventos').select('*').eq('id', eventoId).single()
   if (error) throw error
   return data
-}
-
-export async function obtenerReceptorToken(eventoId: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from('eventos_receptor_tokens')
-    .select('token')
-    .eq('evento_id', eventoId)
-    .maybeSingle()
-  if (error) throw error
-  return data?.token ?? null
 }
 
 export async function marcarEventoCompletado(eventoId: string) {

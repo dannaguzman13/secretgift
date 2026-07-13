@@ -23,24 +23,21 @@ export function DashboardPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Mis eventos</h1>
-        <Link
-          to="/crear-evento"
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800"
-        >
+        <h1 className="font-display text-2xl text-navy-900">Mis eventos</h1>
+        <Link to="/crear-evento" className="btn-primary text-sm">
           + Crear evento
         </Link>
       </div>
 
-      {loading && <p className="text-slate-500">Cargando...</p>}
-      {error && <p className="text-red-600">{error}</p>}
+      {loading && <p className="text-navy-500">Cargando...</p>}
+      {error && <p className="text-error">{error}</p>}
 
       {!loading && !error && (
         <>
           <section className="mb-8">
-            <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500">Próximos</h2>
+            <h2 className="mb-3 text-xs font-bold tracking-wide text-navy-600 uppercase">Próximos</h2>
             {proximos.length === 0 ? (
-              <p className="text-slate-500">No tienes eventos activos todavía.</p>
+              <p className="text-navy-500">No tienes eventos activos todavía.</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {proximos.map((e) => (
@@ -51,13 +48,13 @@ export function DashboardPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500">Historial</h2>
+            <h2 className="mb-3 text-xs font-bold tracking-wide text-navy-600 uppercase">Historial</h2>
             {historial.length === 0 ? (
-              <p className="text-slate-500">Todavía no hay eventos completados.</p>
+              <p className="text-navy-500">Todavía no hay eventos completados.</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {historial.map((e) => (
-                  <EventCard key={e.id} evento={e} />
+                  <EventCard key={e.id} evento={e} showReplicar={e.estado === 'completado'} />
                 ))}
               </div>
             )}

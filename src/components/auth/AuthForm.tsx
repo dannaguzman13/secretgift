@@ -31,43 +31,45 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {mode === 'signup' && (
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Nombre</label>
+          <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+            Nombre
+          </label>
           <input
             type="text"
             required
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+            className="input-field"
           />
         </div>
       )}
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+          Email
+        </label>
         <input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+          className="input-field"
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Contraseña</label>
+        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+          Contraseña
+        </label>
         <input
           type="password"
           required
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+          className="input-field"
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded-md bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-50"
-      >
+      {error && <p className="text-sm text-error">{error}</p>}
+      <button type="submit" disabled={submitting} className="btn-primary w-full">
         {submitting ? 'Cargando...' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
       </button>
     </form>

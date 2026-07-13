@@ -1,7 +1,5 @@
-export function getErrorMessage(err: unknown, fallback = 'Algo salió mal'): string {
-  if (err instanceof Error) return err.message
-  if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
-    return (err as { message: string }).message
-  }
-  return fallback
+import { translateError } from './errorMessages'
+
+export function getErrorMessage(err: unknown, fallback = 'Algo salió mal, inténtalo de nuevo'): string {
+  return translateError(err) ?? fallback
 }

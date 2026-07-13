@@ -3,11 +3,15 @@ import type { FormEvent } from 'react'
 import type { CrearEventoInput } from '../../services/eventos'
 import { getErrorMessage } from '../../utils/helpers'
 
-export function EventForm({ onSubmit }: { onSubmit: (input: CrearEventoInput) => Promise<void> }) {
-  const [nombre, setNombre] = useState('')
-  const [presupuesto, setPresupuesto] = useState('')
-  const [receptorNombre, setReceptorNombre] = useState('')
-  const [receptorEmail, setReceptorEmail] = useState('')
+export function EventForm({
+  onSubmit,
+  initial,
+}: {
+  onSubmit: (input: CrearEventoInput) => Promise<void>
+  initial?: { nombre?: string; presupuesto?: number }
+}) {
+  const [nombre, setNombre] = useState(initial?.nombre ?? '')
+  const [presupuesto, setPresupuesto] = useState(initial?.presupuesto ? String(initial.presupuesto) : '')
   const [fechaCompra, setFechaCompra] = useState('')
   const [fechaRevelacion, setFechaRevelacion] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -32,8 +36,6 @@ export function EventForm({ onSubmit }: { onSubmit: (input: CrearEventoInput) =>
       await onSubmit({
         nombre,
         presupuesto: presupuestoNum,
-        receptorNombre,
-        receptorEmail,
         fechaCompra,
         fechaRevelacion,
       })
@@ -45,20 +47,24 @@ export function EventForm({ onSubmit }: { onSubmit: (input: CrearEventoInput) =>
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="card flex flex-col gap-4">
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Nombre del evento</label>
+        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+          Nombre del evento
+        </label>
         <input
           type="text"
           required
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          placeholder="Cumpleaños de Marta"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+          placeholder="Amigo secreto de fin de año"
+          className="input-field"
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Presupuesto sugerido</label>
+        <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+          Presupuesto sugerido
+        </label>
         <input
           type="number"
           required
@@ -66,59 +72,37 @@ export function EventForm({ onSubmit }: { onSubmit: (input: CrearEventoInput) =>
           step="0.01"
           value={presupuesto}
           onChange={(e) => setPresupuesto(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+          className="input-field"
         />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Nombre del receptor</label>
-          <input
-            type="text"
-            required
-            value={receptorNombre}
-            onChange={(e) => setReceptorNombre(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Email del receptor</label>
-          <input
-            type="email"
-            required
-            value={receptorEmail}
-            onChange={(e) => setReceptorEmail(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Fecha límite de compra</label>
+          <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+            Fecha límite de compra
+          </label>
           <input
             type="date"
             required
             value={fechaCompra}
             onChange={(e) => setFechaCompra(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+            className="input-field"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Fecha de revelación</label>
+          <label className="mb-1 block text-xs font-bold tracking-wide text-navy-600 uppercase">
+            Fecha de revelación
+          </label>
           <input
             type="date"
             required
             value={fechaRevelacion}
             onChange={(e) => setFechaRevelacion(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+            className="input-field"
           />
         </div>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded-md bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-50"
-      >
+      {error && <p className="text-sm text-error">{error}</p>}
+      <button type="submit" disabled={submitting} className="btn-primary">
         {submitting ? 'Creando...' : 'Crear evento'}
       </button>
     </form>

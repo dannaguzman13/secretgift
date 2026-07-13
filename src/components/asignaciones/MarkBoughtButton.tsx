@@ -9,6 +9,7 @@ export function MarkBoughtButton({
   asignacionId: string
   onDone: () => void
 }) {
+  const [nota, setNota] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,7 +17,7 @@ export function MarkBoughtButton({
     setSaving(true)
     setError(null)
     try {
-      await marcarComprado(asignacionId)
+      await marcarComprado(asignacionId, nota.trim() || undefined)
       onDone()
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo guardar'))
@@ -26,15 +27,18 @@ export function MarkBoughtButton({
   }
 
   return (
-    <div>
-      <button
-        onClick={handleClick}
-        disabled={saving}
-        className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
-      >
+    <div className="flex flex-col gap-2">
+      <input
+        type="text"
+        value={nota}
+        onChange={(e) => setNota(e.target.value)}
+        placeholder="Nota opcional (ej. talla, color, dónde lo compraste)"
+        className="input-field text-sm"
+      />
+      <button onClick={handleClick} disabled={saving} className="btn-success self-start">
         {saving ? 'Guardando...' : '✓ Ya compré'}
       </button>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
     </div>
   )
 }
