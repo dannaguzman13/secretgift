@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { User } from '@supabase/supabase-js'
 import { realizarSorteoUltraSecreto, marcarEventoCompletado } from '../../services/eventos'
 import { obtenerAliasDeUsuario } from '../../services/aliases'
@@ -32,6 +33,7 @@ export function UltraSecretoView({
   onMiAsignacionChange: (a: Asignacion) => void
   onSorteoRealizado: () => Promise<void> | void
 }) {
+  const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
   const [revealing, setRevealing] = useState(false)
   const [sorteando, setSorteando] = useState(false)
@@ -55,6 +57,9 @@ export function UltraSecretoView({
       const aliases = obtenerAliasesDeUniverso(evento.universo as Universo)
       await realizarSorteoUltraSecreto(evento.id, [...aliases])
       await onSorteoRealizado()
+      if (isAdmin) {
+        navigate('/dashboard')
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo realizar el sorteo'))
     } finally {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { User } from '@supabase/supabase-js'
 import { realizarSorteo, marcarEventoCompletado } from '../../services/eventos'
 import type { ParticipanteConUsuario } from '../../services/participantes'
@@ -29,6 +30,7 @@ export function AmigoSecretoView({
   onMiAsignacionChange: (a: Asignacion) => void
   onSorteoRealizado: () => Promise<void> | void
 }) {
+  const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
   const [revealing, setRevealing] = useState(false)
   const [sorteando, setSorteando] = useState(false)
@@ -41,6 +43,9 @@ export function AmigoSecretoView({
     try {
       await realizarSorteo(evento.id)
       await onSorteoRealizado()
+      if (isAdmin) {
+        navigate('/dashboard')
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'No se pudo realizar el sorteo'))
     } finally {
