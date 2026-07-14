@@ -88,12 +88,16 @@ export function RuletaGame({
   const [error, setError] = useState<string | null>(null)
   const [girando, setGirando] = useState(false)
   const [rotacion, setRotacion] = useState(0)
-  const [resultadoReciente, setResultadoReciente] = useState<number | null>(null)
+  const [resultadoReciente, setResultadoReciente] = useState<{ turno: number; numero: number } | null>(null)
   const girandoRef = useRef(false)
 
   useEffect(() => {
     girandoRef.current = girando
   }, [girando])
+
+  useEffect(() => {
+    setResultadoReciente((actual) => (actual && turnoActual > actual.turno ? null : actual))
+  }, [turnoActual])
 
   const jugadorEnTurno = calcularTurnoActual(ordenTurnos, turnoActual)
   const esMiTurno = jugadorEnTurno?.usuario_id === usuarioActualId
@@ -139,7 +143,7 @@ export function RuletaGame({
       setRotacion((actual) => calcularRotacionFinal(actual, resultado.numeroRuleta))
       await new Promise((resolve) => setTimeout(resolve, DURACION_GIRO_MS))
       await resolverTurno(eventoId, resultado.numeroTurno, null)
-      setResultadoReciente(resultado.numeroRuleta)
+      setResultadoReciente({ turno: resultado.numeroTurno, numero: resultado.numeroRuleta })
       await cargar()
       await onTurnoResuelto()
     } catch (err) {
@@ -201,7 +205,7 @@ export function RuletaGame({
         {!girando && resultadoReciente !== null && (
           <div className="mt-4 flex flex-col gap-2 text-sm text-navy-600">
             <p>
-              Salió {resultadoReciente}: {RULETA_LABELS[resultadoReciente]}
+              Salió {resultadoReciente.numero}: {RULETA_LABELS[resultadoReciente.numero]}
             </p>
             <p>Realiza esta acción con los regalos físicos en la reunión.</p>
             <button
