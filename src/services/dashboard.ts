@@ -45,8 +45,9 @@ export async function obtenerDashboardEvento(eventoId: string, userId: string): 
 
   if (miAsignacion) {
     if (evento.modo === 'ultra_secreto') {
-      ;[wishlistDestino, miAliasPropio, aliasDestino] = await Promise.all([
+      ;[wishlistDestino, perfilDestino, miAliasPropio, aliasDestino] = await Promise.all([
         obtenerPreferencias(eventoId, miAsignacion.receptor_id),
+        obtenerPerfilUsuario(miAsignacion.receptor_id),
         obtenerMiAlias(eventoId),
         obtenerAliasDeUsuario(eventoId, miAsignacion.receptor_id),
       ])
