@@ -18,6 +18,11 @@ export function LoginPage() {
       <div className="card">
         <AuthForm mode="login" onSubmit={handleLogin} />
       </div>
+      <p className="mt-3 text-center text-sm text-navy-600">
+        <Link to="/forgot-password" className="font-bold text-sky-600 hover:text-sky-700">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </p>
       <p className="mt-4 text-center text-sm text-navy-600">
         ¿No tienes cuenta?{' '}
         <Link
