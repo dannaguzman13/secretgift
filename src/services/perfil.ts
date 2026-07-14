@@ -20,11 +20,9 @@ export async function actualizarPerfil(
   if (error) throw error
 }
 
-export async function obtenerPerfilUsuario(usuarioId: string): Promise<PerfilPublico | null> {
+export async function obtenerPerfilDestino(eventoId: string, usuarioId: string): Promise<PerfilPublico | null> {
   const { data, error } = await supabase
-    .from('usuarios')
-    .select('nombre, apodo, descripcion, perfil_completo')
-    .eq('id', usuarioId)
+    .rpc('obtener_perfil_destino', { p_evento_id: eventoId, p_usuario_id: usuarioId })
     .maybeSingle()
   if (error) throw error
   if (!data) return null

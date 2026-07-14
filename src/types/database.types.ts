@@ -703,6 +703,21 @@ export type Database = {
           usuario_id: string
         }[]
       }
+      obtener_perfil_destino: {
+        Args: { p_evento_id: string; p_usuario_id: string }
+        Returns: {
+          apodo: string | null
+          descripcion: string | null
+          nombre: string
+          perfil_completo: Json
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "usuarios"
+          isOneToOne: false
+          isSetofReturn: false
+        }
+      }
       realizar_sorteo: { Args: { p_evento_id: string }; Returns: undefined }
       realizar_sorteo_ultra_secreto: {
         Args: { p_aliases: string[]; p_evento_id: string }

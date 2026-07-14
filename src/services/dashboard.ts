@@ -5,7 +5,7 @@ import { obtenerMiAsignacion, listarEstadoCompras } from './asignaciones'
 import type { AsignacionConComprador } from './asignaciones'
 import { obtenerPreferencias } from './preferencias'
 import { obtenerMiAlias, obtenerAliasDeUsuario } from './aliases'
-import { obtenerMiPerfil, obtenerPerfilUsuario } from './perfil'
+import { obtenerMiPerfil, obtenerPerfilDestino } from './perfil'
 import type { Evento, Asignacion, Alias, Preferencias, Usuario, PerfilPublico } from '../types/domain'
 import { listarEstadoComprasRegaloRobado } from './regaloRobado'
 import type { EstadoCompraRegaloRobadoConUsuario } from './regaloRobado'
@@ -47,14 +47,14 @@ export async function obtenerDashboardEvento(eventoId: string, userId: string): 
     if (evento.modo === 'ultra_secreto') {
       ;[wishlistDestino, perfilDestino, miAliasPropio, aliasDestino] = await Promise.all([
         obtenerPreferencias(eventoId, miAsignacion.receptor_id),
-        obtenerPerfilUsuario(miAsignacion.receptor_id),
+        obtenerPerfilDestino(eventoId, miAsignacion.receptor_id),
         obtenerMiAlias(eventoId),
         obtenerAliasDeUsuario(eventoId, miAsignacion.receptor_id),
       ])
     } else {
       ;[wishlistDestino, perfilDestino] = await Promise.all([
         obtenerPreferencias(eventoId, miAsignacion.receptor_id),
-        obtenerPerfilUsuario(miAsignacion.receptor_id),
+        obtenerPerfilDestino(eventoId, miAsignacion.receptor_id),
       ])
     }
   }
