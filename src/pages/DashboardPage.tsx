@@ -55,7 +55,9 @@ export function DashboardPage() {
       .then(setData)
       .catch((err) => setDataError(getErrorMessage(err, 'No se pudo cargar este evento')))
       .finally(() => setLoadingData(false))
-  }, [eventoId, user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- user.id (not the user object, which Supabase
+    // replaces with a new reference on every token refresh) is what should trigger a refetch here.
+  }, [eventoId, user?.id])
 
   useEffect(() => {
     setRuletaModalOpen(false)
@@ -95,7 +97,8 @@ export function DashboardPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [eventoId, user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see note above; avoid resubscribing on token refresh.
+  }, [eventoId, user?.id])
 
   async function handleActualizarEstadoCompra(usuarioId: string, estado: 'pendiente' | 'comprado') {
     if (!eventoId || !data) return

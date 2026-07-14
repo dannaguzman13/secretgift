@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { TurnoRuleta } from '../../types/domain'
 import type { ParticipanteConUsuario } from '../../services/participantes'
 import {
@@ -22,10 +22,10 @@ const RULETA_LABELS: Record<number, string> = {
 
 const SLICE_COLORS = [
   'var(--color-coral-400)',
-  'var(--color-sky-400)',
   'var(--color-peach-300)',
-  'var(--color-warning)',
-  'var(--color-success)',
+  'var(--color-pale-sky-100)',
+  'var(--color-sky-400)',
+  'url(#gajo5Gradiente)',
 ]
 
 const WHEEL_CX = 100
@@ -53,6 +53,7 @@ const GAJOS = SLICE_COLORS.map((color, idx) => {
   return {
     numero,
     color,
+    textColor: numero === 5 ? 'white' : 'var(--color-navy-900)',
     path: `M ${WHEEL_CX} ${WHEEL_CY} L ${p1.x} ${p1.y} A ${WHEEL_R} ${WHEEL_R} 0 0 1 ${p2.x} ${p2.y} Z`,
     labelX: label.x,
     labelY: label.y,
@@ -88,6 +89,11 @@ export function RuletaGame({
   const [girando, setGirando] = useState(false)
   const [rotacion, setRotacion] = useState(0)
   const [resultadoReciente, setResultadoReciente] = useState<number | null>(null)
+  const girandoRef = useRef(false)
+
+  useEffect(() => {
+    girandoRef.current = girando
+  }, [girando])
 
   const jugadorEnTurno = calcularTurnoActual(ordenTurnos, turnoActual)
   const esMiTurno = jugadorEnTurno?.usuario_id === usuarioActualId
@@ -105,7 +111,7 @@ export function RuletaGame({
       const turnoPendienteMio = historial.find(
         (turno) => turno.accion === 'pendiente' && turno.participante_id === usuarioActualId,
       )
-      if (turnoPendienteMio) {
+      if (turnoPendienteMio && !girandoRef.current) {
         try {
           await resolverTurno(eventoId, turnoPendienteMio.numero_turno, null)
           const historialActualizado = await obtenerTurnosRegaloRobado(eventoId)
@@ -163,6 +169,12 @@ export function RuletaGame({
             }}
           >
             <svg viewBox="0 0 200 200" className="w-full">
+              <defs>
+                <radialGradient id="gajo5Gradiente" cx="100" cy="100" r={WHEEL_R} gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="var(--color-pale-sky-100)" />
+                  <stop offset="100%" stopColor="var(--color-navy-900)" />
+                </radialGradient>
+              </defs>
               {GAJOS.map((gajo) => (
                 <path key={gajo.numero} d={gajo.path} fill={gajo.color} stroke="white" strokeWidth={2} />
               ))}
@@ -175,7 +187,7 @@ export function RuletaGame({
                   dominantBaseline="middle"
                   fontFamily="var(--font-display)"
                   fontSize={22}
-                  fill="var(--color-navy-900)"
+                  fill={gajo.textColor}
                 >
                   {gajo.numero}
                 </text>
