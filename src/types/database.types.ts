@@ -294,6 +294,48 @@ export type Database = {
           },
         ]
       }
+      preferencias: {
+        Row: {
+          created_at: string | null
+          deseos: string[]
+          evento_id: string
+          restricciones: string | null
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          deseos?: string[]
+          evento_id: string
+          restricciones?: string | null
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          deseos?: string[]
+          evento_id?: string
+          restricciones?: string | null
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preferencias_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preferencias_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       regalo_robado_compras: {
         Row: {
           comprado_at: string | null
@@ -371,48 +413,6 @@ export type Database = {
           },
           {
             foreignKeyName: "regalo_robado_turnos_usuario_id_fkey"
-            columns: ["usuario_id"]
-            isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      preferencias: {
-        Row: {
-          created_at: string | null
-          deseos: string[]
-          evento_id: string
-          restricciones: string | null
-          updated_at: string | null
-          usuario_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          deseos?: string[]
-          evento_id: string
-          restricciones?: string | null
-          updated_at?: string | null
-          usuario_id: string
-        }
-        Update: {
-          created_at?: string | null
-          deseos?: string[]
-          evento_id?: string
-          restricciones?: string | null
-          updated_at?: string | null
-          usuario_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "preferencias_evento_id_fkey"
-            columns: ["evento_id"]
-            isOneToOne: false
-            referencedRelation: "eventos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "preferencias_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
@@ -540,24 +540,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      actualizar_mi_estado_compra_regalo_robado: {
-        Args: { p_estado: string; p_evento_id: string }
-        Returns: {
-          comprado_at: string | null
-          created_at: string
-          estado: string
-          evento_id: string
-          id: string
-          updated_at: string
-          usuario_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "regalo_robado_compras"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       actualizar_mi_estado_compra: {
         Args: { p_estado: string; p_evento_id: string }
         Returns: {
@@ -574,6 +556,24 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "asignaciones"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      actualizar_mi_estado_compra_regalo_robado: {
+        Args: { p_estado: string; p_evento_id: string }
+        Returns: {
+          comprado_at: string | null
+          created_at: string
+          estado: string
+          evento_id: string
+          id: string
+          updated_at: string
+          usuario_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "regalo_robado_compras"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -656,19 +656,6 @@ export type Database = {
       }
       is_event_member: { Args: { p_evento_id: string }; Returns: boolean }
       join_event_by_code: { Args: { p_codigo: string }; Returns: string }
-      listar_estado_compras_regalo_robado: {
-        Args: { p_evento_id: string }
-        Returns: {
-          comprado_at: string | null
-          created_at: string
-          estado: string
-          evento_id: string
-          id: string
-          updated_at: string
-          usuario_id: string
-          usuario_nombre: string
-        }[]
-      }
       listar_estado_compras: {
         Args: { p_evento_id: string }
         Returns: {
@@ -677,6 +664,19 @@ export type Database = {
           comprador_nombre: string
           estado: string
           id: string
+        }[]
+      }
+      listar_estado_compras_regalo_robado: {
+        Args: { p_evento_id: string }
+        Returns: {
+          comprado_at: string
+          created_at: string
+          estado: string
+          evento_id: string
+          id: string
+          updated_at: string
+          usuario_id: string
+          usuario_nombre: string
         }[]
       }
       listar_participantes_convencional: {
@@ -703,20 +703,25 @@ export type Database = {
           usuario_id: string
         }[]
       }
+      obtener_orden_turnos_regalo_robado: {
+        Args: { p_evento_id: string }
+        Returns: {
+          created_at: string
+          evento_id: string
+          id: string
+          orden: number
+          usuario_id: string
+          usuario_nombre: string
+        }[]
+      }
       obtener_perfil_destino: {
         Args: { p_evento_id: string; p_usuario_id: string }
         Returns: {
-          apodo: string | null
-          descripcion: string | null
+          apodo: string
+          descripcion: string
           nombre: string
           perfil_completo: Json
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "usuarios"
-          isOneToOne: false
-          isSetofReturn: false
-        }
       }
       realizar_sorteo: { Args: { p_evento_id: string }; Returns: undefined }
       realizar_sorteo_ultra_secreto: {
