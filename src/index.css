@@ -122,16 +122,7 @@
   /* motion */
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --duration-slow: 600ms;
-  --animate-roulette-tick: roulette-tick 120ms var(--ease-bounce);
-}
-
-@keyframes roulette-tick {
-  from {
-    transform: scale(0.75);
-  }
-  to {
-    transform: scale(1);
-  }
+  --ease-wheel: cubic-bezier(0.12, 0.67, 0.18, 1);
 }
 
 body {

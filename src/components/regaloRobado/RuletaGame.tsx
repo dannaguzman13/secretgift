@@ -20,6 +20,54 @@ const RULETA_LABELS: Record<number, string> = {
   5: 'Elige 3 o más personas para rotar sus regalos',
 }
 
+const SLICE_COLORS = [
+  'var(--color-coral-400)',
+  'var(--color-sky-400)',
+  'var(--color-peach-300)',
+  'var(--color-warning)',
+  'var(--color-success)',
+]
+
+const WHEEL_CX = 100
+const WHEEL_CY = 100
+const WHEEL_R = 90
+const LABEL_R = 58
+const DURACION_GIRO_MS = 3200
+
+function puntoPolar(angoDeg: number, radio: number) {
+  const rad = (angoDeg * Math.PI) / 180
+  return { x: WHEEL_CX + radio * Math.sin(rad), y: WHEEL_CY - radio * Math.cos(rad) }
+}
+
+function anguloCentroGajo(numero: number) {
+  return (numero - 1) * 72 + 36
+}
+
+const GAJOS = SLICE_COLORS.map((color, idx) => {
+  const numero = idx + 1
+  const inicio = idx * 72
+  const fin = inicio + 72
+  const p1 = puntoPolar(inicio, WHEEL_R)
+  const p2 = puntoPolar(fin, WHEEL_R)
+  const label = puntoPolar(inicio + 36, LABEL_R)
+  return {
+    numero,
+    color,
+    path: `M ${WHEEL_CX} ${WHEEL_CY} L ${p1.x} ${p1.y} A ${WHEEL_R} ${WHEEL_R} 0 0 1 ${p2.x} ${p2.y} Z`,
+    labelX: label.x,
+    labelY: label.y,
+  }
+})
+
+function calcularRotacionFinal(rotacionActual: number, numeroFinal: number) {
+  const vueltasMin = rotacionActual + 5 * 360
+  const deseado = ((360 - anguloCentroGajo(numeroFinal)) % 360 + 360) % 360
+  const restante = ((vueltasMin % 360) + 360) % 360
+  let diff = deseado - restante
+  if (diff < 0) diff += 360
+  return vueltasMin + diff
+}
+
 export function RuletaGame({
   eventoId,
   participantes,
@@ -38,7 +86,7 @@ export function RuletaGame({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [girando, setGirando] = useState(false)
-  const [numeroAnimado, setNumeroAnimado] = useState<number | null>(null)
+  const [rotacion, setRotacion] = useState(0)
   const [resultadoReciente, setResultadoReciente] = useState<number | null>(null)
 
   const jugadorEnTurno = calcularTurnoActual(ordenTurnos, turnoActual)
@@ -77,22 +125,13 @@ export function RuletaGame({
     cargar()
   }, [cargar, turnoActual])
 
-  async function animarRuleta(numeroFinal: number) {
-    const delays = [70, 70, 80, 90, 110, 130, 160, 200, 250, 310, 380]
-    let actual = Math.floor(Math.random() * 5) + 1
-    for (let i = 0; i < delays.length; i++) {
-      actual = i === delays.length - 1 ? numeroFinal : (actual % 5) + 1
-      setNumeroAnimado(actual)
-      await new Promise((resolve) => setTimeout(resolve, delays[i]))
-    }
-  }
-
   async function handleGirar() {
     setGirando(true)
     setError(null)
     try {
       const resultado = await girarRuleta(eventoId)
-      await animarRuleta(resultado.numeroRuleta)
+      setRotacion((actual) => calcularRotacionFinal(actual, resultado.numeroRuleta))
+      await new Promise((resolve) => setTimeout(resolve, DURACION_GIRO_MS))
       await resolverTurno(eventoId, resultado.numeroTurno, null)
       setResultadoReciente(resultado.numeroRuleta)
       await cargar()
@@ -101,7 +140,6 @@ export function RuletaGame({
       setError(getErrorMessage(err, 'No se pudo girar la ruleta'))
     } finally {
       setGirando(false)
-      setNumeroAnimado(null)
     }
   }
 
@@ -115,17 +153,38 @@ export function RuletaGame({
         <p className="text-xs font-bold tracking-wide text-navy-600 uppercase">Turno de</p>
         <p className="font-display text-xl text-navy-900">{jugadorEnTurno?.usuario?.nombre ?? '—'}</p>
 
-        {girando && (
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <div
-              key={numeroAnimado}
-              className="animate-roulette-tick flex h-20 w-20 items-center justify-center rounded-full border-4 border-coral-400 bg-pale-sky-50 font-display text-4xl text-navy-900"
-            >
-              {numeroAnimado ?? '—'}
-            </div>
-            <p className="text-sm text-navy-500">Girando...</p>
+        <div className="relative mx-auto mt-4 w-52 max-w-full">
+          <div className="absolute left-1/2 top-0 z-10 h-0 w-0 -translate-x-1/2 -translate-y-1/2 border-x-8 border-t-[14px] border-x-transparent border-t-navy-800" />
+          <div
+            className="drop-shadow-md"
+            style={{
+              transform: `rotate(${rotacion}deg)`,
+              transition: `transform ${DURACION_GIRO_MS}ms var(--ease-wheel)`,
+            }}
+          >
+            <svg viewBox="0 0 200 200" className="w-full">
+              {GAJOS.map((gajo) => (
+                <path key={gajo.numero} d={gajo.path} fill={gajo.color} stroke="white" strokeWidth={2} />
+              ))}
+              {GAJOS.map((gajo) => (
+                <text
+                  key={`label-${gajo.numero}`}
+                  x={gajo.labelX}
+                  y={gajo.labelY}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontFamily="var(--font-display)"
+                  fontSize={22}
+                  fill="var(--color-navy-900)"
+                >
+                  {gajo.numero}
+                </text>
+              ))}
+            </svg>
           </div>
-        )}
+        </div>
+
+        {girando && <p className="mt-4 text-sm text-navy-500">Girando...</p>}
 
         {!girando && resultadoReciente !== null && (
           <div className="mt-4 flex flex-col gap-2 text-sm text-navy-600">
