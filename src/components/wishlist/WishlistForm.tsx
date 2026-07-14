@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { obtenerPreferencias, upsertPreferencias } from '../../services/preferencias'
 import { getErrorMessage } from '../../utils/helpers'
 
@@ -91,6 +92,11 @@ export function WishlistForm({ eventoId, usuarioId }: { eventoId: string; usuari
       <button type="submit" disabled={saving} className="btn-primary">
         {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar'}
       </button>
+      {saved && (
+        <Link to="/dashboard" className="btn-ghost text-center">
+          Ir al Dashboard
+        </Link>
+      )}
     </form>
   )
 }

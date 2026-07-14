@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { actualizarEvento } from '../../services/eventos'
+import { actualizarEvento, eliminarEvento } from '../../services/eventos'
 import { validarPresupuesto } from '../../utils/presupuesto'
 import { validarFechaIntercambio } from '../../utils/fechaIntercambio'
 import { getErrorMessage } from '../../utils/helpers'
@@ -23,10 +23,12 @@ export function EditarEventoModal({
   evento,
   onClose,
   onGuardado,
+  onEliminado,
 }: {
   evento: Evento
   onClose: () => void
   onGuardado: (evento: Evento) => void
+  onEliminado?: () => void
 }) {
   const [nombre, setNombre] = useState(evento.nombre)
   const [descripcion, setDescripcion] = useState(evento.descripcion ?? '')
@@ -37,6 +39,8 @@ export function EditarEventoModal({
   const [intercambioHora, setIntercambioHora] = useState(toTimeInput(evento.fecha_intercambio))
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
 
   async function handleGuardar() {
     if (!nombre.trim()) {
@@ -74,6 +78,55 @@ export function EditarEventoModal({
     } finally {
       setGuardando(false)
     }
+  }
+
+  async function handleEliminar() {
+    setError(null)
+    setEliminando(true)
+    try {
+      await eliminarEvento(evento.id)
+      onEliminado?.()
+      onClose()
+    } catch (err) {
+      setError(getErrorMessage(err, 'No se pudo eliminar el evento'))
+      setEliminando(false)
+    }
+  }
+
+  if (confirmandoEliminar) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/60 p-4">
+        <div className="card flex w-full max-w-md flex-col">
+          <h3 className="mb-4 font-display text-lg text-navy-900">Eliminar evento</h3>
+          <p className="text-sm text-navy-600">
+            ¿Seguro que quieres eliminar <strong>{evento.nombre}</strong>? Esta acción no se puede deshacer y
+            eliminará toda la información del evento (participantes, listas de deseos, asignaciones).
+          </p>
+          {error && <p className="mt-3 text-sm text-error">{error}</p>}
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              className="btn-ghost flex-1"
+              disabled={eliminando}
+              onClick={() => {
+                setConfirmandoEliminar(false)
+                setError(null)
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn-primary flex-1 !bg-error"
+              disabled={eliminando}
+              onClick={handleEliminar}
+            >
+              {eliminando ? 'Eliminando...' : 'Sí, eliminar evento'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -159,6 +212,16 @@ export function EditarEventoModal({
                 />
               </div>
             )}
+            <div className="border-t border-pale-sky-200 pt-4">
+              <h4 className="mb-3 text-xs font-bold tracking-wide text-error uppercase">Zona de peligro</h4>
+              <button
+                type="button"
+                className="btn-ghost w-full border border-error text-error"
+                onClick={() => setConfirmandoEliminar(true)}
+              >
+                Eliminar evento
+              </button>
+            </div>
           </div>
         </div>
 

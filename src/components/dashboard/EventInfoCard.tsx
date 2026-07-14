@@ -13,10 +13,12 @@ export function EventInfoCard({
   evento,
   participantesCount,
   onEventoActualizado,
+  onEventoEliminado,
 }: {
   evento: Evento
   participantesCount: number
   onEventoActualizado?: (evento: Evento) => void
+  onEventoEliminado?: (eventoId: string) => void
 }) {
   const { user } = useAuth()
   const [editando, setEditando] = useState(false)
@@ -70,6 +72,7 @@ export function EventInfoCard({
           evento={evento}
           onClose={() => setEditando(false)}
           onGuardado={(actualizado) => onEventoActualizado?.(actualizado)}
+          onEliminado={() => onEventoEliminado?.(evento.id)}
         />
       )}
     </div>

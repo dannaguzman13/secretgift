@@ -122,6 +122,14 @@ export function DashboardPage() {
     }
   }
 
+  function handleEventoEliminado(eventoIdEliminado: string) {
+    const restantes = eventos.filter((e) => e.id !== eventoIdEliminado)
+    setEventos(restantes)
+    setData(null)
+    const siguiente = restantes.find((e) => e.estado === 'activo') ?? restantes[0]
+    navigate(siguiente ? `/dashboard/${siguiente.id}` : '/dashboard', { replace: true })
+  }
+
   function handleRegaloRobadoActivado(evento: Evento) {
     setData((prev) => (prev ? { ...prev, evento } : prev))
     setEventos((prev) => prev.map((item) => (item.id === evento.id ? evento : item)))
@@ -164,6 +172,7 @@ export function DashboardPage() {
                 evento={data.evento}
                 participantesCount={data.participantesCount}
                 onEventoActualizado={(evento) => setData((prev) => (prev ? { ...prev, evento } : prev))}
+                onEventoEliminado={handleEventoEliminado}
               />
               <ModeBlock
                 data={data}

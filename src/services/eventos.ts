@@ -141,3 +141,8 @@ export async function actualizarEvento(eventoId: string, input: ActualizarEvento
   if (error) throw error
   return data
 }
+
+export async function eliminarEvento(eventoId: string): Promise<void> {
+  const { error } = await supabase.from('eventos').delete().eq('id', eventoId)
+  if (error) throw error
+}
