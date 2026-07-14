@@ -21,12 +21,19 @@ export interface ParticipanteUltraSecreto {
 }
 
 export async function listarParticipantes(eventoId: string): Promise<ParticipanteConUsuario[]> {
-  const { data, error } = await supabase
-    .from('participantes')
-    .select('id, evento_id, usuario_id, rol, estado, created_at, usuario:usuarios(nombre)')
-    .eq('evento_id', eventoId)
+  const { data, error } = await supabase.rpc('listar_participantes_convencional', {
+    p_evento_id: eventoId,
+  })
   if (error) throw error
-  return (data ?? []) as unknown as ParticipanteConUsuario[]
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    evento_id: row.evento_id,
+    usuario_id: row.usuario_id,
+    rol: row.rol,
+    estado: row.estado,
+    created_at: row.created_at,
+    usuario: { nombre: row.usuario_nombre },
+  }))
 }
 
 export async function listarParticipantesUltraSecreto(eventoId: string): Promise<ParticipanteUltraSecreto[]> {

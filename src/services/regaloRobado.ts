@@ -56,13 +56,18 @@ export async function actualizarMiEstadoCompra(
 }
 
 export async function obtenerOrdenTurnosRegaloRobado(eventoId: string): Promise<TurnoRegaloRobadoConUsuario[]> {
-  const { data, error } = await supabase
-    .from('regalo_robado_turnos')
-    .select('id, evento_id, usuario_id, orden, created_at, usuario:usuarios(nombre)')
-    .eq('evento_id', eventoId)
-    .order('orden')
+  const { data, error } = await supabase.rpc('obtener_orden_turnos_regalo_robado', {
+    p_evento_id: eventoId,
+  })
   if (error) throw error
-  return (data ?? []) as unknown as TurnoRegaloRobadoConUsuario[]
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    evento_id: row.evento_id,
+    usuario_id: row.usuario_id,
+    orden: row.orden,
+    created_at: row.created_at,
+    usuario: { nombre: row.usuario_nombre },
+  }))
 }
 
 export async function obtenerTurnosRegaloRobado(eventoId: string): Promise<TurnoRuleta[]> {
